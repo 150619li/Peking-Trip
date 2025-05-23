@@ -4,7 +4,6 @@ let isMapInitialized = false;
 let currentInfoWindow = null;
 let markerClusterer = null;
 
-
 // 初始化高德地图
 function initializeMap() {
     if (isMapInitialized) return;
@@ -194,7 +193,6 @@ function registerMapEvents() {
         }, 2000);
     });
 }
-
 
 // 在DOM加载完成后初始化地图
 document.addEventListener('DOMContentLoaded', function() {

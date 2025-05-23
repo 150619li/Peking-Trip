@@ -1,3 +1,4 @@
+//#region 变量 
 
 // 景点名称坐标
 const poiCoords = {
@@ -60,8 +61,32 @@ const poiCoords = {
     '钟亭': [116.307987,39.994391]
 };
 
-//初始化后将景点添加到列表
+// 初始化步行导航插件
+let walking;
+walking = new AMap.Walking({
+    map: map,
+});
+
+// 全局变量，存储当前路线polyline
+let currentRoutePolyline = null;
+let currentMarkers = [];
+
+//#endregion
+
+//#region 初始化
+
+// 初始化事件
 document.addEventListener('DOMContentLoaded', function() {
+    // 初始化景点列表双击事件
+    initScenicListEvents();
+    
+    // 初始化清空按钮
+    initClearButton();
+    
+    // 规划路线按钮事件
+    document.getElementById('planRouteBtn').addEventListener('click', planRoute);
+    
+    // 添加景点到列表
     const scenicList = document.querySelector('.scenic-list ul');
     if (scenicList) {
         scenicList.innerHTML = '';
@@ -73,58 +98,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+//#endregion
 
-// 获取景点类别
-function getCategoryForPoi(poiName) {
-    const poiListItems = document.querySelectorAll('.poi-list li');
-    for (const item of poiListItems) {
-        if (item.textContent.trim() === poiName) { // Use .trim() to remove whitespace
-            return item.getAttribute('data-category') || 'all';
-        }
-    }
-    return 'all';
-}
-
-
-// 初始化步行导航插件
-let walking;
-walking = new AMap.Walking({
-    map: map,
-});
-
-// 全局变量，存储当前路线polyline
-let currentRoutePolyline = null;
-let currentMarkers = [];
-
-// 搜索地点经纬度
-function searchPoint(target) {
-    return new Promise((resolve, reject) => {
-        // 先检查是否是已定义的景点
-        if (poiCoords[target]) {
-            const coords = poiCoords[target];
-            resolve(new AMap.LngLat(coords[0], coords[1]));
-            return;
-        }
-        
-        let geocoder = new AMap.Geocoder({
-            city: "北京", // 限定在北京范围内搜索
-            radius: 1000 // 搜索半径
-        });
-        
-        geocoder.getLocation(target, function (status, result) {
-            if (status === 'complete' && result.geocodes.length > 0) {
-                let location = result.geocodes[0].location;
-                console.log(`${target}经纬度:`, location.lng, location.lat);
-                resolve(location);
-            } else {
-                console.error(`无法获取${target}的经纬度`);
-                reject(`无法获取${target}的经纬度，请更换关键词再试`);
-            }
-        });
-        
-    });
-}
-
+//#region 函数
 // 为景点列表添加双击事件
 function initScenicListEvents() {
     document.querySelectorAll('.scenic-list ul:first-child li').forEach(function(item) {
@@ -159,6 +135,45 @@ function initScenicListEvents() {
                 selectedList.appendChild(newItem);
             }
         });
+    });
+}
+// 获取景点类别
+function getCategoryForPoi(poiName) {
+    const poiListItems = document.querySelectorAll('.poi-list li');
+    for (const item of poiListItems) {
+        if (item.textContent.trim() === poiName) { // Use .trim() to remove whitespace
+            return item.getAttribute('data-category') || 'all';
+        }
+    }
+    return 'all';
+}
+
+// 搜索地点经纬度
+function searchPoint(target) {
+    return new Promise((resolve, reject) => {
+        // 先检查是否是已定义的景点
+        if (poiCoords[target]) {
+            const coords = poiCoords[target];
+            resolve(new AMap.LngLat(coords[0], coords[1]));
+            return;
+        }
+        
+        let geocoder = new AMap.Geocoder({
+            city: "北京", // 限定在北京范围内搜索
+            radius: 1000 // 搜索半径
+        });
+        
+        geocoder.getLocation(target, function (status, result) {
+            if (status === 'complete' && result.geocodes.length > 0) {
+                let location = result.geocodes[0].location;
+                console.log(`${target}经纬度:`, location.lng, location.lat);
+                resolve(location);
+            } else {
+                console.error(`无法获取${target}的经纬度`);
+                reject(`无法获取${target}的经纬度，请更换关键词再试`);
+            }
+        });
+        
     });
 }
 
@@ -328,7 +343,6 @@ function removePoisFromMap() {
     }
 }
 
-
 // 初始化清空按钮
 function initClearButton() {
     const buttonContainer = document.querySelector('.scenic-list > div:nth-child(2)');
@@ -491,16 +505,5 @@ function calculateMultiPointRoute(points) {
     });
 }
 
-// 初始化事件
-document.addEventListener('DOMContentLoaded', function() {
-    // 初始化景点列表双击事件
-    initScenicListEvents();
-    
-    // 初始化清空按钮
-    initClearButton();
-    
-    // 规划路线按钮事件
-    document.getElementById('planRouteBtn').addEventListener('click', planRoute);
-    
-    
-});
+
+//#endregion
