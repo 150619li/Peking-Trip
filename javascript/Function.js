@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
 //#region 函数
 // 为景点列表添加双击事件
 function initScenicListEvents() {
-    document.querySelectorAll('.scenic-list ul:first-child li').forEach(function(item) {
+    document.querySelectorAll('.scenic-list ul li').forEach(function(item) {
         item.addEventListener('dblclick', function() {
             var selectedList = document.getElementById('selected-list');
             
@@ -137,6 +137,7 @@ function initScenicListEvents() {
         });
     });
 }
+
 // 获取景点类别
 function getCategoryForPoi(poiName) {
     const poiListItems = document.querySelectorAll('.poi-list li');
@@ -177,6 +178,15 @@ function searchPoint(target) {
     });
 }
 
+//清除地图上的标记
+function removePoisFromMap(){
+    if (currentMarkers.length > 0) {
+        map.remove(currentMarkers);
+        currentMarkers = [];
+    }
+}
+
+
 // 添加景点标记到地图
 async function addPoisToMap(category = 'all') {
     
@@ -185,8 +195,6 @@ async function addPoisToMap(category = 'all') {
         map.remove(currentMarkers);
         currentMarkers = [];
     }
-
-    let markers = [];
 
     for (const name in poiCoords) {
         
@@ -285,14 +293,13 @@ async function addPoisToMap(category = 'all') {
             }, 100);
         });
 
-        markers.push(marker);
         currentMarkers.push(marker);
     }
 
     // 添加标记到地图
-    if (markers.length > 0) {
-        map.add(markers);
-        map.setFitView(markers);
+    if (currentMarkers.length > 0) {
+        map.add(currentMarkers);
+        map.setFitView(currentMarkers);
     } else {
         alert('没有找到符合条件的景点');
     }

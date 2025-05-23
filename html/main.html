@@ -201,13 +201,7 @@
                 const tabId = button.getAttribute('data-tab') + '-tab';
                 document.getElementById(tabId).classList.add('active');
             
-                // Logic to show/hide markers based on active tab
-                if (tabId === 'scenic-tab') {
-                    addPoisToMap('all'); // Show all POIs when entering scenic tab
-                } else {
-                    removePoisFromMap(); // Remove POIs when leaving scenic tab
-                }
-            
+                addPoisToMap('all');
             });
         });
         
@@ -250,10 +244,6 @@
             });
         });
         
-        // 清空列表按钮
-        document.getElementById('clear-selected').addEventListener('click', () => {
-            document.getElementById('selected-list').innerHTML = '';
-        });
     </script>
 </body>
 </html>

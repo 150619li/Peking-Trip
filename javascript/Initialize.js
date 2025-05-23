@@ -275,9 +275,9 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeMap();
     // 注册地图事件
     registerMapEvents();
-    // 创建校园边界
-    //createCampusBoundary();
     // 添加定位按钮
     locateUser();
+    // 添加景点标记
+    addPoisToMap('all');
     
 });
