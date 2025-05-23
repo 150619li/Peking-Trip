@@ -194,16 +194,8 @@ function registerMapEvents() {
     });
 }
 
-// 在DOM加载完成后初始化地图
-document.addEventListener('DOMContentLoaded', function() {
-
-    // 初始化地图
-    initializeMap();
-    // 注册地图事件
-    registerMapEvents();
-    // 创建校园边界
-    //createCampusBoundary();
-    
+// 定位按钮点击事件
+function locateUser() {
     // 检测浏览器是否支持定位
     if (navigator.geolocation) {
         // 添加定位按钮
@@ -228,23 +220,31 @@ document.addEventListener('DOMContentLoaded', function() {
             navigator.geolocation.getCurrentPosition(function(position) {
                 const currentPos = [position.coords.longitude, position.coords.latitude];
                 
-                // 创建当前位置标记
-                const locationMarker = new AMap.Marker({
-                    position: currentPos,
-                    title: '当前位置',
+                // 将点转换为GCJ02坐标系
+                AMap.convertFrom(currentPos, 'gps', function(status, result) {
+                    if (status === 'complete' && result.locations && result.locations.length > 0) {
+                        const gcj02Pos = result.locations[0];
+                        // 创建当前位置标记
+                        const locationMarker = new AMap.Marker({
+                            position: gcj02Pos,
+                            title: '当前位置',
+                        });
 
+                        // 将标记添加到地图
+                        map.add(locationMarker);
+
+                        // 将地图中心设置为当前位置
+                        map.setCenter(gcj02Pos);
+
+                        // 2秒后移除标记
+                        setTimeout(function() {
+                            map.remove(locationMarker);
+                        }, 2000);
+                    } else {
+                        alert('坐标转换失败');
+                    }
                 });
                 
-                // 将标记添加到地图
-                map.add(locationMarker);
-                
-                // 将地图中心设置为当前位置
-                map.setCenter(currentPos);
-                
-                // 2秒后移除标记
-                setTimeout(function() {
-                    map.remove(locationMarker);
-                }, 10000);
             }, function(error) {
                 switch(error.code) {
                     case error.PERMISSION_DENIED:
@@ -263,4 +263,21 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+    else {
+        alert("浏览器不支持定位");
+    }
+}
+
+// 在DOM加载完成后初始化地图
+document.addEventListener('DOMContentLoaded', function() {
+
+    // 初始化地图
+    initializeMap();
+    // 注册地图事件
+    registerMapEvents();
+    // 创建校园边界
+    //createCampusBoundary();
+    // 添加定位按钮
+    locateUser();
+    
 });

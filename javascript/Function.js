@@ -180,9 +180,12 @@ function searchPoint(target) {
 // 添加景点标记到地图
 async function addPoisToMap(category = 'all') {
     
-    removePoisFromMap(); // 清除之前的标记
+    // 清除之前的标记
+    if (currentMarkers.length > 0) {
+        map.remove(currentMarkers);
+        currentMarkers = [];
+    }
 
-    
     let markers = [];
 
     for (const name in poiCoords) {
@@ -215,7 +218,7 @@ async function addPoisToMap(category = 'all') {
         // 创建标记
         const marker = new AMap.Marker({
             position: coords,
-            title: name
+            title: name,
         });
         
 
@@ -230,10 +233,14 @@ async function addPoisToMap(category = 'all') {
                 </div>
             `,
             offset: new AMap.Pixel(0, -30)
+            
         });
 
+        
         // 点击标记显示信息窗体
         marker.on('click', () => {
+            
+            // 打开信息窗体
             infoWindow.open(map, marker.getPosition());
             
             // 给"添加到行程"按钮添加事件
@@ -282,65 +289,14 @@ async function addPoisToMap(category = 'all') {
         currentMarkers.push(marker);
     }
 
-    // 优化聚合配置
-    const clusterOpts = {
-        gridSize: 60,
-        maxZoom: 16,
-        minClusterSize: 2,
-        renderClusterMarker: function(context) {
-            const count = context.count;
-            const size = Math.round(30 + Math.pow(count / 10, 1/2) * 20);
-            
-            // 使用自定义图标替代DOM渲染
-            const canvas = document.createElement('canvas');
-            canvas.width = size;
-            canvas.height = size;
-            const ctx = canvas.getContext('2d', { willReadFrequently: true });
-            
-            // 绘制圆形背景
-            ctx.beginPath();
-            ctx.arc(size/2, size/2, size/2, 0, 2 * Math.PI);
-            ctx.fillStyle = 'rgba(145, 36, 44, 0.8)';
-            ctx.fill();
-            
-            // 绘制文字
-            ctx.fillStyle = 'white';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.font = 'bold ' + (size/3) + 'px Arial';
-            ctx.fillText(count, size/2, size/2);
-            
-            // 设置图标
-            context.marker.setContent(canvas);
-        }
-    };
-
-    // 创建聚合管理器
-    if (markers.length > 0) {
-        markerClusterer = new AMap.MarkerClusterer(map, markers, clusterOpts);
-    }
-
     // 添加标记到地图
     if (markers.length > 0) {
         map.add(markers);
         map.setFitView(markers);
+    } else {
+        alert('没有找到符合条件的景点');
     }
 
-}
-
-// 清除地图上的POI
-function removePoisFromMap() {
-    // 清除之前的标记
-    if (currentMarkers.length > 0) {
-        map.remove(currentMarkers);
-        currentMarkers = [];
-    }
-
-    // 清除聚合管理器
-    if (markerClusterer) {
-        markerClusterer.setMap(null);
-        markerClusterer = null;
-    }
 }
 
 // 初始化清空按钮
