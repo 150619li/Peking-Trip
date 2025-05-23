@@ -1,66 +1,7 @@
 //#region 变量 
 
-// 景点名称坐标
-const poiCoords = {
-    '东门': [116.315817,39.992129],
-    '南门': [116.311537, 39.986601],
-    '西门': [116.304572, 39.994556],
-    '未名湖': [116.310501, 39.994628],
-    '办公楼': [116.306451,39.994587],
-    '博雅塔': [116.311843, 39.993964],
-    '蔡元培铜像': [116.307364,39.994333],
-    '慈济寺山门': [116.310389,39.994075],
-    '丹陛石': [116.306008,39.994628],
-    '档案馆': [116.306478,39.993874],
-    '德才均备斋': [116.308648,39.995454],
-    '第二体育馆': [116.308099,39.990734],
-    '第一体育馆': [116.31153,39.995298],
-    '断桥残雪石牌坊构件': [116.309703,39.99731],
-    '俄文楼': [116.308706,39.99285],
-    '翻尾石鱼': [116.308318,39.994316],
-    '方池': [116.306328,39.996284],
-    '革命烈士纪念碑': [116.30819,39.992155],
-    '葛利普墓': [116.305331,39.993749],
-    '国立西南联合大学纪念碑': [116.305269,39.993722],
-    '海晏堂引水槽': [116.304767,39.993987],
-    '杭爱碑': [116.308596,39.992112],
-    '花神庙碑': [116.30998,39.994086],
-    '华表': [116.305475,39.994521],
-    '静园': [116.308047,39.991695],
-    '镜春园': [116.309296,39.996504],
-    '赖朴吾、夏仁德墓': [116.3092,39.993777],
-    '朗润园': [116.30988,39.99803],
-    '李大钊像': [116.308169,39.992897],
-    '临湖轩': [116.309,39.993596],
-    '鲁斯亭': [116.309901,39.994751],
-    '梅石碑': [116.308403,39.993373],
-    '民主楼': [116.30642,39.995309],
-    '鸣鹤园': [116.305315,39.9953],
-    '南北阁': [116.307501,39.992893],
-    '旗杆座（1934）': [116.310344,39.994057],
-    '旗杆座（1952）': [116.305359,39.993995],
-    '乾隆御制诗碑': [116.30799,39.994296],
-    '日晷': [116.30591,39.995295],
-    '塞万提斯像': [116.305994,39.992799],
-    '三一八遇难烈士纪念碑': [116.306489,39.993373],
-    '石雕五供及石供桌': [116.308907,39.993841],
-    '石舫': [116.309901,39.994751],
-    '石盆': [116.309012,39.99353],
-    '石屏风': [116.309999,39.995805],
-    '石麒麟': [116.306305,39.994615],
-    '守仁国际中心建筑群': [116.310777,39.993554999],
-    '斯诺墓': [116.31041,39.993893],
-    '体斋 健斋 全斋': [116.309474,39.995811],
-    '外文楼': [116.305906,39.99504],
-    '西式平桥': [116.309151,39.995045],
-    '校景亭': [116.306558,39.996225],
-    '校友桥': [116.305062,39.994592],
-    '燕南园': [116.308725,39.989572],
-    '振兴中华碑': [116.310448,39.992544],
-    '治贝子园': [116.314541,39.98905],
-    '钟亭': [116.307987,39.994391]
-};
-
+// 全局变量，存储所有景点数据
+let poiFeatures = null;
 // 全局变量，存储当前路线polyline
 let currentRoutePolyline = null;
 let currentMarkers = [];
@@ -70,26 +11,47 @@ let currentMarkers = [];
 //#region 初始化
 
 // 初始化事件
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // 初始化清空按钮
-    initClearButton();
-    
-    // 规划路线按钮事件
-    document.getElementById('planRouteBtn').addEventListener('click', planRoute);
-    
-    // 添加景点到列表
-    const scenicList = document.querySelector('.scenic-list ul');
-    if (scenicList) {
-        scenicList.innerHTML = '';
-        Object.keys(poiCoords).forEach(name => {
-            const li = document.createElement('li');
-            li.textContent = name;
-            li.setAttribute('data-category', getCategoryForPoi(name)); 
-            scenicList.appendChild(li);
-        });
-        // 初始化景点列表双击事件
-        initScenicListEvents();
+document.addEventListener('DOMContentLoaded', async function() {
+    // 加载GeoJSON数据
+    try {
+        const response = await fetch('../geojsonGCJ/points_of_interest.geojson');
+        const geojsonData = await response.json();
+        poiFeatures = geojsonData.features;
+        
+        // 初始化清空按钮
+        initClearButton();
+        
+        // 规划路线按钮事件
+        document.getElementById('planRouteBtn').addEventListener('click', planRoute);
+        
+        // 添加景点到列表
+        const scenicList = document.querySelector('.scenic-list ul');
+        if (scenicList) {
+            scenicList.innerHTML = '';
+            poiFeatures.forEach(feature => {
+                const li = document.createElement('li');
+                li.textContent = feature.properties.name;
+                li.setAttribute('data-category', feature.properties.category);
+                scenicList.appendChild(li);
+            });
+            // 初始化景点列表双击事件
+            initScenicListEvents();
+        }
+
+        // 添加景点到列表
+        const poilist = document.querySelector('.poi-list ul');
+        if (poilist) {
+            poilist.innerHTML = '';
+            poiFeatures.forEach(feature => {
+                const li = document.createElement('li');
+                li.textContent = feature.properties.name;
+                li.setAttribute('data-category', feature.properties.category);
+                poilist.appendChild(li);
+            });
+        }
+
+    } catch (error) {
+        console.error('加载景点数据失败:', error);
     }
 });
 //#endregion
@@ -147,15 +109,16 @@ function getCategoryForPoi(poiName) {
 function searchPoint(target) {
     return new Promise((resolve, reject) => {
         // 先检查是否是已定义的景点
-        if (poiCoords[target]) {
-            const coords = poiCoords[target];
+        const foundFeature = poiFeatures.find(feature => feature.properties.name === target);
+        if (foundFeature) {
+            const coords = foundFeature.geometry.coordinates;
             resolve(new AMap.LngLat(coords[0], coords[1]));
             return;
         }
         
         let geocoder = new AMap.Geocoder({
-            city: "北京", // 限定在北京范围内搜索
-            radius: 1000 // 搜索半径
+            city: "北京",
+            radius: 1000
         });
         
         geocoder.getLocation(target, function (status, result) {
@@ -168,7 +131,6 @@ function searchPoint(target) {
                 reject(`无法获取${target}的经纬度，请更换关键词再试`);
             }
         });
-        
     });
 }
 
@@ -182,24 +144,20 @@ function removePoisFromMap(){
 
 // 添加景点标记到地图
 async function addPoisToMap(category = 'all') {
-    
     // 清除之前的标记
     if (currentMarkers.length > 0) {
         map.remove(currentMarkers);
         currentMarkers = [];
     }
 
-    for (const name in poiCoords) {
-        
-        // 检查POI是否属于所选类别
-        const poiCategory = getCategoryForPoi(name);
-        if (category !== 'all' && poiCategory !== category) {
-            continue; // 跳过不属于所选类别的POI
-        }
+    // 筛选符合类别的景点
+    const filteredFeatures = poiFeatures.filter(feature => 
+        category === 'all' || feature.properties.category === category
+    );
 
-        // 获取POI坐标
-        const coords = poiCoords[name];
-        if (!coords || coords.length !== 2) continue;
+    for (const feature of filteredFeatures) {
+        const name = feature.properties.name;
+        const coords = feature.geometry.coordinates;
 
         // 获取景点描述
         let description = '';
@@ -221,7 +179,6 @@ async function addPoisToMap(category = 'all') {
             position: coords,
             title: name,
         });
-        
 
         // 创建信息窗体
         const infoWindow = new AMap.InfoWindow({
@@ -234,16 +191,12 @@ async function addPoisToMap(category = 'all') {
                 </div>
             `,
             offset: new AMap.Pixel(0, -30)
-            
         });
 
-        
         // 点击标记显示信息窗体
         marker.on('click', () => {
-            
-            // 打开信息窗体
             infoWindow.open(map, marker.getPosition());
-            
+
             // 给"添加到行程"按钮添加事件
             setTimeout(() => {
                 const addBtn = document.getElementById('add-to-selected');
@@ -278,7 +231,6 @@ async function addPoisToMap(category = 'all') {
                             newItem.appendChild(deleteBtn);
                             selectedList.appendChild(newItem);
                         }
-
                         
                         infoWindow.close();
                     };
@@ -335,7 +287,6 @@ function planRoute() {
         return;
     }
 
-    // 检查 walking 插件是否已初始化
     if (!walking) {
         console.error('步行导航插件未初始化');
         alert('系统未准备就绪，请稍后重试');
@@ -350,7 +301,8 @@ function planRoute() {
     selectedItems.forEach(function(li) {
         // 去除删除按钮的文本
         const name = li.textContent.replace(' ×', '').trim();
-        if (poiCoords[name]) {
+        const feature = poiFeatures.find(f => f.properties.name === name);
+        if (feature) {
             selectedPoints.push(name);
         }
     });
@@ -369,14 +321,14 @@ function planRoute() {
         console.log('起点坐标：', startPoint);
         console.log('终点坐标：', endPoint);
 
-
         // 构建路径点数组
         let routePoints = [startPoint];
         
         // 添加中间景点
         selectedPoints.forEach(point => {
-            const coords = poiCoords[point];
-            if (coords && coords.length === 2) {
+            const feature = poiFeatures.find(f => f.properties.name === point);
+            if (feature) {
+                const coords = feature.geometry.coordinates;
                 routePoints.push(new AMap.LngLat(coords[0], coords[1]));
             }
         });
