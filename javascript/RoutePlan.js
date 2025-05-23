@@ -1,10 +1,10 @@
 
-// 景点名称到坐标的映射
+// 景点名称坐标
 const poiCoords = {
-    '东门': [116.315817,39.992129],
-    '南门': [116.311537, 39.986601],
+    //'东门': [116.315817,39.992129],
+    //'南门': [116.311537, 39.986601],
     '西门': [116.304572, 39.994556],
-    '未名湖': [116.310501, 39.994628],
+    //'未名湖': [116.310501, 39.994628],
     '办公楼': [116.306451,39.994587],
     '博雅塔': [116.311843, 39.993964],
     '蔡元培铜像': [116.307364,39.994333],
@@ -60,6 +60,7 @@ const poiCoords = {
     '钟亭': [116.307987,39.994391]
 };
 
+//初始化后将景点添加到列表
 document.addEventListener('DOMContentLoaded', function() {
     const scenicList = document.querySelector('.scenic-list ul');
     if (scenicList) {
@@ -67,14 +68,13 @@ document.addEventListener('DOMContentLoaded', function() {
         Object.keys(poiCoords).forEach(name => {
             const li = document.createElement('li');
             li.textContent = name;
-            li.setAttribute('data-category', getCategoryForPoi(name)); // Add category attribute to list item
+            li.setAttribute('data-category', getCategoryForPoi(name)); 
             scenicList.appendChild(li);
         });
     }
 });
 
-
-
+// 获取景点类别
 function getCategoryForPoi(poiName) {
     const poiListItems = document.querySelectorAll('.poi-list li');
     for (const item of poiListItems) {
@@ -92,7 +92,6 @@ walking = new AMap.Walking({
     map: map,
 });
 
-
 // 全局变量，存储当前路线polyline
 let currentRoutePolyline = null;
 let currentMarkers = [];
@@ -106,7 +105,6 @@ function searchPoint(target) {
             resolve(new AMap.LngLat(coords[0], coords[1]));
             return;
         }
-        
         
         let geocoder = new AMap.Geocoder({
             city: "北京", // 限定在北京范围内搜索
@@ -136,7 +134,7 @@ function initScenicListEvents() {
             // 检查是否已经添加过
             let isDuplicate = false;
             selectedList.querySelectorAll('li').forEach(existingItem => {
-                if (existingItem.textContent === this.textContent) {
+                if (existingItem.textContent.replace(' ×', '').trim() === item.textContent.trim()) {
                     isDuplicate = true;
                 }
             });
@@ -166,20 +164,21 @@ function initScenicListEvents() {
 
 // 添加景点标记到地图
 async function addPoisToMap(category = 'all') {
-    // 清除之前的标记
-    if (currentMarkers.length > 0) {
-        map.remove(currentMarkers);
-        currentMarkers = [];
-    }
     
+    removePoisFromMap(); // 清除之前的标记
+
+    
+    let markers = [];
+
     for (const name in poiCoords) {
-        // Check if the POI belongs to the selected category
+        
+        // 检查POI是否属于所选类别
         const poiCategory = getCategoryForPoi(name);
         if (category !== 'all' && poiCategory !== category) {
-            continue; // Skip if not in the selected category
+            continue; // 跳过不属于所选类别的POI
         }
 
-
+        // 获取POI坐标
         const coords = poiCoords[name];
         if (!coords || coords.length !== 2) continue;
 
@@ -201,11 +200,9 @@ async function addPoisToMap(category = 'all') {
         // 创建标记
         const marker = new AMap.Marker({
             position: coords,
-            map: map,
             title: name
         });
         
-        currentMarkers.push(marker);
 
         // 创建信息窗体
         const infoWindow = new AMap.InfoWindow({
@@ -229,12 +226,12 @@ async function addPoisToMap(category = 'all') {
                 const addBtn = document.getElementById('add-to-selected');
                 if (addBtn) {
                     addBtn.onclick = () => {
-                        const selectedList = document.getElementById('selected-list');
+                        var selectedList = document.getElementById('selected-list');
                         
                         // 检查是否已添加
                         let isDuplicate = false;
-                        selectedList.querySelectorAll('li').forEach(item => {
-                            if (item.textContent.includes(name)) {
+                        selectedList.querySelectorAll('li').forEach(existingItem => {
+                            if (existingItem.textContent.replace(' ×', '').trim() === name.trim()) {
                                 isDuplicate = true;
                             }
                         });
@@ -258,20 +255,76 @@ async function addPoisToMap(category = 'all') {
                             newItem.appendChild(deleteBtn);
                             selectedList.appendChild(newItem);
                         }
+
                         
                         infoWindow.close();
                     };
                 }
             }, 100);
         });
+
+        markers.push(marker);
+        currentMarkers.push(marker);
     }
+
+    // 优化聚合配置
+    const clusterOpts = {
+        gridSize: 60,
+        maxZoom: 16,
+        minClusterSize: 2,
+        renderClusterMarker: function(context) {
+            const count = context.count;
+            const size = Math.round(30 + Math.pow(count / 10, 1/2) * 20);
+            
+            // 使用自定义图标替代DOM渲染
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            
+            // 绘制圆形背景
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, size/2, 0, 2 * Math.PI);
+            ctx.fillStyle = 'rgba(145, 36, 44, 0.8)';
+            ctx.fill();
+            
+            // 绘制文字
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = 'bold ' + (size/3) + 'px Arial';
+            ctx.fillText(count, size/2, size/2);
+            
+            // 设置图标
+            context.marker.setContent(canvas);
+        }
+    };
+
+    // 创建聚合管理器
+    if (markers.length > 0) {
+        markerClusterer = new AMap.MarkerClusterer(map, markers, clusterOpts);
+    }
+
+    // 添加标记到地图
+    if (markers.length > 0) {
+        map.add(markers);
+        map.setFitView(markers);
+    }
+
 }
 
-// Function to remove all POI markers from the map
+// 清除地图上的POI
 function removePoisFromMap() {
+    // 清除之前的标记
     if (currentMarkers.length > 0) {
         map.remove(currentMarkers);
         currentMarkers = [];
+    }
+
+    // 清除聚合管理器
+    if (markerClusterer) {
+        markerClusterer.setMap(null);
+        markerClusterer = null;
     }
 }
 
@@ -369,7 +422,6 @@ function calculateMultiPointRoute(points) {
         map.remove(currentRoutePolyline);
     }
     
-    let pathSegments = [];
     let promiseArray = [];
     
     // 创建每段路径的Promise

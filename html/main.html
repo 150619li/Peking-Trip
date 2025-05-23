@@ -8,7 +8,20 @@
     <script type="text/javascript">
         window._AMapSecurityConfig = {securityJsCode: "6bd5974ed9467fdf2bde2031302da489"};
     </script>
-    <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=ebd787ba58266a6b8ee4b92d4c7d9100&plugin=AMap.Walking,AMap.Geocoder"></script>
+    <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=ebd787ba58266a6b8ee4b92d4c7d9100&plugin=AMap.Walking,AMap.Geocoder,AMap.MarkerClusterer"></script>
+    <!-- 添加资源预加载 -->
+    <link rel="preload" href="../css/style.css" as="style">
+    <link rel="preload" href="../javascript/MapInitialize.js" as="script">
+    <link rel="preload" href="../javascript/RoutePlan.js" as="script">
+    
+    <!-- 添加DNS预解析 -->
+    <link rel="dns-prefetch" href="https://webapi.amap.com">
+    
+    <!-- 添加性能监控 -->
+    <script>
+        // 性能监控
+        window.performance && window.performance.mark && window.performance.mark('start');
+    </script>
 </head>
 <body>
     <div class="header">

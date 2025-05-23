@@ -2,29 +2,30 @@
 let map;
 let isMapInitialized = false;
 let currentInfoWindow = null;
+let markerClusterer = null;
+
 
 // 初始化高德地图
 function initializeMap() {
     if (isMapInitialized) return;
     
-    // 北京大学的中心坐标
-    const mapCenter = [116.310918, 39.992873];
-    const mapZoom = 15;
-    
-    // 创建地图实例
-    map = new AMap.Map('map', {
-        center: mapCenter,
-        zoom: mapZoom,
+    // 设置canvas性能优化
+    const mapOpts = {
+        center: [116.310918, 39.992873],
+        zoom: 15,
         mapStyle: 'amap://styles/normal',
-        resizeEnable: true
-    });
-
-    map.on('click', function(e) {
-    if (e && e.lnglat) {
-        alert(`${e.lnglat.getLng()},${e.lnglat.getLat()}`);
-    }
-});
+        resizeEnable: true,
+        viewMode: '2D',
+        crs: 'EPSG3857',
+        webGL: true,
+        optimizePanAnimation: true,
+        canvasRenderOptions: {
+            willReadFrequently: true // 添加这个属性来优化getImageData的性能
+        }
+    };
     
+    map = new AMap.Map('map', mapOpts);
+
     // 添加地图控件
     map.plugin(['AMap.ToolBar', 'AMap.Scale', 'AMap.HawkEye', 'AMap.MapType'], function() {
         // 工具条控件，默认位于地图右上角
@@ -50,19 +51,13 @@ function initializeMap() {
         }));
     });
     
-
-    // 创建校园边界
-    //createCampusBoundary();
-    
-    // 注册地图事件
-    registerMapEvents();
-    
     isMapInitialized = true;
 }
 
 // 创建北大校园边界
 function createCampusBoundary() {
-    // 北大校园边界坐标点（这里使用简化版本）
+
+    // 北大校园边界坐标点
     const pkuBoundary = [
         [116.30566877129714, 39.9862958897499], 
         [116.30534141686996, 39.98829744569817],
@@ -126,7 +121,7 @@ function createCampusBoundary() {
                                                        [116.30911633433163, 39.986412560951806],
                                                         [116.30582406117374, 39.9863111405093], 
                                                         [116.30566877129714, 39.9862958897499]
-    ];
+];
     
     // 创建多边形
     const polygon = new AMap.Polygon({
@@ -144,17 +139,30 @@ function createCampusBoundary() {
 
 // 注册地图事件
 function registerMapEvents() {
-    // 点击地图关闭信息窗体
-    map.on('click', function() {
+    
+    // 点击事件监听
+    map.on('click', function(e) {
         if (currentInfoWindow) {
             currentInfoWindow.close();
         }
+        // if (e && e.lnglat) {
+        //     alert(`${e.lnglat.getLng()},${e.lnglat.getLat()}`);
+        // }
     });
     
-    // 地图缩放完成事件
+    // 缩放事件监听
     map.on('zoomend', function() {
-        // 根据缩放级别调整标记大小或其他UI元素
-        const currentZoom = map.getZoom();
+        const zoom = map.getZoom();
+        if (markerClusterer) {
+            // 根据缩放级别调整聚合参数
+            if (zoom <= 14) {
+                markerClusterer.setGridSize(80);
+            } else if (zoom <= 15) {
+                markerClusterer.setGridSize(60);
+            } else {
+                markerClusterer.setGridSize(40);
+            }
+        }
     });
     
     // 地图加载完成事件
@@ -188,42 +196,15 @@ function registerMapEvents() {
 }
 
 
-
-
-// 创建标记点
-function createMarker(position, title, content) {
-    // 创建标记
-    const marker = new AMap.Marker({
-        position: position,
-        title: title,
-        animation: 'AMAP_ANIMATION_DROP', // 点标记的动画效果
-        clickable: true
-    });
-    
-    // 创建信息窗体
-    const infoWindow = new AMap.InfoWindow({
-        content: content,
-        offset: new AMap.Pixel(0, -30),
-        closeWhenClickMap: true // 点击地图关闭信息窗体
-    });
-    
-    // 点击标记时显示信息窗体
-    marker.on('click', function() {
-        // 先关闭当前打开的信息窗体
-        if (currentInfoWindow) {
-            currentInfoWindow.close();
-        }
-        
-        infoWindow.open(map, marker.getPosition());
-        currentInfoWindow = infoWindow;
-    });
-    
-    return marker;
-}
-
 // 在DOM加载完成后初始化地图
 document.addEventListener('DOMContentLoaded', function() {
+
+    // 初始化地图
     initializeMap();
+    // 注册地图事件
+    registerMapEvents();
+    // 创建校园边界
+    //createCampusBoundary();
     
     // 检测浏览器是否支持定位
     if (navigator.geolocation) {

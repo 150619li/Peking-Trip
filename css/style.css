@@ -15,12 +15,17 @@ body {
 
 /* 顶部导航栏 */
 .header {
-    background-color: #91242c; /* 北大红色 */
+    background: linear-gradient(to right, white, #91242c); /* 从左到右白变红的渐变色 */
     color: white;
     padding: 15px 30px;
     display: flex;
     align-items: center;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.logo img {
+    height: 100px; /* 稍微放大一点 */
+    vertical-align: middle;
 }
 
 .logo {
@@ -31,10 +36,10 @@ body {
     height: 40px;
     vertical-align: middle;
 }
-
 .header h1 {
     font-size: 24px;
     font-weight: bold;
+    color: #91242c;
 }
 
 /* 主内容区 */
