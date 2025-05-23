@@ -9,7 +9,7 @@ let walking;
 function initializeMap() {
     if (isMapInitialized) return;
     
-    // 设置canvas性能优化
+    //设置canvas性能优化   
     const mapOpts = {
         center: [116.310918, 39.992873],
         zoom: 15,
@@ -19,13 +19,24 @@ function initializeMap() {
         crs: 'EPSG3857',
         webGL: true,
         optimizePanAnimation: true,
+        features: ['bg', 'road', 'building'],
+        showLabel: false, // 关闭默认标注
+        showIndoorMap: false, // 关闭室内地图
+        defaultLayer: new AMap.TileLayer({
+            visible: true,
+            zIndex: 0,
+            zooms: [3, 20],
+            showLabel: false // 确保图层也不显示标注
+        }),
         canvasRenderOptions: {
-            willReadFrequently: true // 添加这个属性来优化getImageData的性能
+            willReadFrequently: true
         }
     };
+      map = new AMap.Map('map', mapOpts);
     
-    map = new AMap.Map('map', mapOpts);
-
+    // 关闭默认的POI标注
+    map.setFeatures(['bg', 'road', 'building']);
+    
     // 添加地图控件
     map.plugin(['AMap.ToolBar', 'AMap.Scale', 'AMap.HawkEye', 'AMap.MapType','AMap.Walking','AMap.MarkerCluster','AMap.Icon'], function() {
         // 工具条控件，默认位于地图右上角
@@ -58,6 +69,7 @@ function initializeMap() {
     });
     
     isMapInitialized = true;
+
 }
 
 // 创建北大校园边界

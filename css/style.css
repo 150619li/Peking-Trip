@@ -331,6 +331,22 @@ body {
     margin-top: auto;
 }
 
+.amap-marker-label {
+    background: none ;
+    border: none ;
+    box-shadow: none ;
+    color: #333 ;
+    font-size: 12px ;
+    font-weight: bold ;
+    padding: 2px  ;
+    border-radius: 0 ;
+    text-shadow:
+        0 0 3px #fff,
+        0 0 6px #fff,
+        0 0 9px #fff;
+}
+
+
 /* 响应式调整 */
 @media (max-width: 992px) {
     .content {

@@ -50,6 +50,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
         }
 
+        addPoisToMap('all');
+
     } catch (error) {
         console.error('加载景点数据失败:', error);
     }
@@ -150,6 +152,27 @@ async function addPoisToMap(category = 'all') {
         currentMarkers = [];
     }
 
+    const markerStyles = {
+        'history': {
+            content: `<div style="background-color: #c03; width: 24px; height: 24px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+                        <span style="color: white; font-weight: bold; font-size: 14px;">史</span>
+                     </div>`,
+            offset: new AMap.Pixel(-12, -12)
+        },
+        'nature': {
+            content: `<div style="background-color: #090; width: 24px; height: 24px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+                        <span style="color: white; font-weight: bold; font-size: 14px;">自</span>
+                     </div>`,
+            offset: new AMap.Pixel(-12, -12)
+        },
+        'culture': {
+            content: `<div style="background-color: #06c; width: 24px; height: 24px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+                        <span style="color: white; font-weight: bold; font-size: 14px;">文</span>
+                     </div>`,
+            offset: new AMap.Pixel(-12, -12)
+        }
+    };
+
     // 筛选符合类别的景点
     const filteredFeatures = poiFeatures.filter(feature => 
         category === 'all' || feature.properties.category === category
@@ -158,6 +181,7 @@ async function addPoisToMap(category = 'all') {
     for (const feature of filteredFeatures) {
         const name = feature.properties.name;
         const coords = feature.geometry.coordinates;
+        const poiCategory = feature.properties.category;
 
         // 获取景点描述
         let description = '';
@@ -172,12 +196,18 @@ async function addPoisToMap(category = 'all') {
             description = '暂无介绍';
         }
 
-        const image = `../sites/${name}.jpg`;
-
-        // 创建标记
+        const image = `../sites/${name}.jpg`;        // 创建标记，使用对应类别的样式
         const marker = new AMap.Marker({
             position: coords,
             title: name,
+            content: markerStyles[poiCategory].content,
+            offset: markerStyles[poiCategory].offset,
+            label: {
+                offset: new AMap.Pixel(1, -1),
+                content: name,
+                direction: 'right',
+                
+            }
         });
 
         // 创建信息窗体
@@ -185,6 +215,15 @@ async function addPoisToMap(category = 'all') {
             content: `
                 <div style="width:220px; max-height:180px; overflow:auto;">
                     <h3 style="margin-top:5px;">${name}</h3>
+                    <p style="margin:5px 0; color: ${
+                        poiCategory === 'history' ? '#c03' : 
+                        poiCategory === 'nature' ? '#090' : 
+                        '#06c'
+                    }">类别：${
+                        poiCategory === 'history' ? '历史建筑' : 
+                        poiCategory === 'nature' ? '自然景观' : 
+                        '文化设施'
+                    }</p>
                     <img src="${image}" alt="${name}" style="width:200px; margin:5px 0;"><br>
                     <button id="add-to-selected" style="background:#4CAF50; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:3px; margin-top:5px;">添加到行程</button>
                     <p style="font-size:14px; line-height:1.5;">${description}</p>
