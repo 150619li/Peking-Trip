@@ -2,7 +2,8 @@
 let map;
 let isMapInitialized = false;
 let currentInfoWindow = null;
-let markerClusterer = null;
+// 初始化步行导航插件
+let walking;
 
 // 初始化高德地图
 function initializeMap() {
@@ -26,7 +27,7 @@ function initializeMap() {
     map = new AMap.Map('map', mapOpts);
 
     // 添加地图控件
-    map.plugin(['AMap.ToolBar', 'AMap.Scale', 'AMap.HawkEye', 'AMap.MapType'], function() {
+    map.plugin(['AMap.ToolBar', 'AMap.Scale', 'AMap.HawkEye', 'AMap.MapType','AMap.Walking','AMap.MarkerCluster','AMap.Icon'], function() {
         // 工具条控件，默认位于地图右上角
         map.addControl(new AMap.ToolBar({
             position: 'LT',
@@ -46,8 +47,14 @@ function initializeMap() {
         // 地图类型切换控件
         map.addControl(new AMap.MapType({
             defaultType: 0 // 默认显示普通地图
-            
-        }));
+        }));        
+        
+        // 初始化步行导航插件，不直接在地图上显示路线
+        walking = new AMap.Walking({
+            map: null,  // 不在地图上显示
+            autoFitView: false
+        });
+
     });
     
     isMapInitialized = true;
@@ -152,21 +159,10 @@ function registerMapEvents() {
     // 缩放事件监听
     map.on('zoomend', function() {
         const zoom = map.getZoom();
-        if (markerClusterer) {
-            // 根据缩放级别调整聚合参数
-            if (zoom <= 14) {
-                markerClusterer.setGridSize(80);
-            } else if (zoom <= 15) {
-                markerClusterer.setGridSize(60);
-            } else {
-                markerClusterer.setGridSize(40);
-            }
-        }
+        
     });
-    
-    // 地图加载完成事件
+      // 地图加载完成事件
     map.on('complete', function() {
-        console.log('地图加载完成');
         // 添加一个加载完成的提示
         const loadingTip = document.createElement('div');
         loadingTip.className = 'map-loaded-tip';
@@ -182,7 +178,7 @@ function registerMapEvents() {
         loadingTip.style.zIndex = '999';
         
         document.body.appendChild(loadingTip);
-        
+
         // 2秒后移除提示
         setTimeout(function() {
             loadingTip.style.opacity = '0';

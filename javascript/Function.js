@@ -2,10 +2,10 @@
 
 // 景点名称坐标
 const poiCoords = {
-    //'东门': [116.315817,39.992129],
-    //'南门': [116.311537, 39.986601],
+    '东门': [116.315817,39.992129],
+    '南门': [116.311537, 39.986601],
     '西门': [116.304572, 39.994556],
-    //'未名湖': [116.310501, 39.994628],
+    '未名湖': [116.310501, 39.994628],
     '办公楼': [116.306451,39.994587],
     '博雅塔': [116.311843, 39.993964],
     '蔡元培铜像': [116.307364,39.994333],
@@ -61,12 +61,6 @@ const poiCoords = {
     '钟亭': [116.307987,39.994391]
 };
 
-// 初始化步行导航插件
-let walking;
-walking = new AMap.Walking({
-    map: map,
-});
-
 // 全局变量，存储当前路线polyline
 let currentRoutePolyline = null;
 let currentMarkers = [];
@@ -77,8 +71,6 @@ let currentMarkers = [];
 
 // 初始化事件
 document.addEventListener('DOMContentLoaded', function() {
-    // 初始化景点列表双击事件
-    initScenicListEvents();
     
     // 初始化清空按钮
     initClearButton();
@@ -96,6 +88,8 @@ document.addEventListener('DOMContentLoaded', function() {
             li.setAttribute('data-category', getCategoryForPoi(name)); 
             scenicList.appendChild(li);
         });
+        // 初始化景点列表双击事件
+        initScenicListEvents();
     }
 });
 //#endregion
@@ -185,7 +179,6 @@ function removePoisFromMap(){
         currentMarkers = [];
     }
 }
-
 
 // 添加景点标记到地图
 async function addPoisToMap(category = 'all') {
@@ -342,6 +335,14 @@ function planRoute() {
         return;
     }
 
+    // 检查 walking 插件是否已初始化
+    if (!walking) {
+        console.error('步行导航插件未初始化');
+        alert('系统未准备就绪，请稍后重试');
+        return;
+    }
+
+    console.log('开始获取已选景点');
     // 获取已选景点
     const selectedItems = document.querySelectorAll('#selected-list li');
     const selectedPoints = [];
@@ -354,6 +355,9 @@ function planRoute() {
         }
     });
     
+
+    console.log('选中的景点：', selectedPoints);
+    
     // 先获取起点和终点坐标
     Promise.all([
         searchPoint(startText),
@@ -362,6 +366,10 @@ function planRoute() {
         const startPoint = results[0];
         const endPoint = results[1];
         
+        console.log('起点坐标：', startPoint);
+        console.log('终点坐标：', endPoint);
+
+
         // 构建路径点数组
         let routePoints = [startPoint];
         
@@ -376,6 +384,8 @@ function planRoute() {
         // 添加终点
         routePoints.push(endPoint);
         
+        console.log('所有路径点：', routePoints);
+
         // 清除之前的路线
         if (currentRoutePolyline) {
             map.remove(currentRoutePolyline);
@@ -394,6 +404,7 @@ function calculateMultiPointRoute(points) {
         return;
     }
     
+    console.log('开始计算多点路线');
     // 清除之前的覆盖物但保留标记
     if (currentRoutePolyline) {
         map.remove(currentRoutePolyline);
@@ -404,6 +415,7 @@ function calculateMultiPointRoute(points) {
     // 创建每段路径的Promise
     for (let i = 0; i < points.length - 1; i++) {
         promiseArray.push(new Promise((resolve, reject) => {
+            console.log(`计算第 ${i+1} 段路线`);
             walking.search(points[i], points[i + 1], function(status, result) {
                 if (status === 'complete' && result.routes && result.routes[0]) {
                     let segment = [];
@@ -421,6 +433,7 @@ function calculateMultiPointRoute(points) {
                         duration: duration
                     });
                 } else {
+                    console.error('路径规划失败:', status, result);
                     reject('路径规划失败');
                 }
             });
@@ -464,6 +477,7 @@ function calculateMultiPointRoute(points) {
         
     }).catch(function(error) {
         console.error(error);
+        console.error('路线规划错误：', error);
         alert('路线规划出错: ' + error);
     });
 }
