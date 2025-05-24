@@ -5,7 +5,7 @@
             "type": "Feature",
             "properties": {
                 "name": "东门",
-                "category": "history"
+                "category": "door"
             },
             "geometry": {
                 "type": "Point",
@@ -15,8 +15,30 @@
         {
             "type": "Feature",
             "properties": {
+                "name": "东侧门",
+                "category": "door"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [116.315561,39.993037]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "东南门",
+                "category": "door"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [116.315864,39.990096]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
                 "name": "南门",
-                "category": "history"
+                "category": "door"
             },
             "geometry": {
                 "type": "Point",
@@ -26,12 +48,78 @@
         {
             "type": "Feature",
             "properties": {
+                "name": "西南门",
+                "category": "door"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [116.305464,39.987576]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
                 "name": "西门",
-                "category": "history"
+                "category": "door"
             },
             "geometry": {
                 "type": "Point",
                 "coordinates": [116.304572, 39.994556]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "卫生间",
+                "category": "toilet"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [116.306117,39.996141]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "卫生间",
+                "category": "toilet"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [116.309612,39.988668]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "卫生间",
+                "category": "toilet"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [116.309006,39.990059]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "卫生间",
+                "category": "toilet"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [116.306231,39.989419]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "卫生间",
+                "category": "toilet"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [116.31417,39.989396]
             }
         },
         {

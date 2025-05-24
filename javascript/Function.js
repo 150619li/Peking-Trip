@@ -153,6 +153,18 @@ async function addPoisToMap(category = 'all') {
     }
 
     const markerStyles = {
+        'toilet': {
+            content: `<div style="background-color: #c03; width: 24px; height: 24px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+                        <span style="color: white; font-weight: bold; font-size: 14px;">厕</span>
+                     </div>`,
+            offset: new AMap.Pixel(-12, -12)
+        },
+        'door': {
+            content: `<div style="background-color: #c03; width: 24px; height: 24px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+                        <span style="color: white; font-weight: bold; font-size: 14px;">门</span>
+                     </div>`,
+            offset: new AMap.Pixel(-12, -12)
+        },
         'history': {
             content: `<div style="background-color: #c03; width: 24px; height: 24px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
                         <span style="color: white; font-weight: bold; font-size: 14px;">史</span>
@@ -216,10 +228,14 @@ async function addPoisToMap(category = 'all') {
                 <div style="width:220px; max-height:180px; overflow:auto;">
                     <h3 style="margin-top:5px;">${name}</h3>
                     <p style="margin:5px 0; color: ${
+                        poiCategory === 'toilet' ? '#c03' :
+                        poiCategory === 'door' ? '#c03' :
                         poiCategory === 'history' ? '#c03' : 
                         poiCategory === 'nature' ? '#090' : 
                         '#06c'
                     }">类别：${
+                        poiCategory === 'toilet' ? '厕所' :
+                        poiCategory === 'door' ? '门' :
                         poiCategory === 'history' ? '历史建筑' : 
                         poiCategory === 'nature' ? '自然景观' : 
                         '文化设施'
