@@ -375,26 +375,81 @@ function planRoute() {
         const startPoint = results[0];
         const endPoint = results[1];
         
-        console.log('起点坐标：', startPoint);
-        console.log('终点坐标：', endPoint);
-
-        // 构建路径点数组
-        let routePoints = [startPoint];
-        
-        // 添加中间景点
+        // 构建中间景点坐标数组
+        let middlePoints = [];
         selectedPoints.forEach(point => {
             const feature = poiFeatures.find(f => f.properties.name === point);
             if (feature) {
                 const coords = feature.geometry.coordinates;
-                routePoints.push(new AMap.LngLat(coords[0], coords[1]));
+                middlePoints.push(new AMap.LngLat(coords[0], coords[1]));
             }
         });
-        
-        // 添加终点
-        routePoints.push(endPoint);
-        
-        console.log('所有路径点：', routePoints);
 
+        // TSP优化：根据中间点数量选择算法
+        function permute(arr) {
+            if (arr.length <= 1) return [arr];
+            let result = [];
+            for (let i = 0; i < arr.length; i++) {
+                let rest = arr.slice(0, i).concat(arr.slice(i + 1));
+                let restPerm = permute(rest);
+                for (let perm of restPerm) {
+                    result.push([arr[i]].concat(perm));
+                }
+            }
+            return result;
+        }
+
+        function calcRouteLen(pointsArr) {
+            let len = 0;
+            let prev = startPoint;
+            for (let p of pointsArr) {
+                len += prev.distance(p);
+                prev = p;
+            }
+            len += prev.distance(endPoint);
+            return len;
+        }
+
+        // 最近邻启发式算法
+        function nearestNeighbor(pointsArr) {
+            let unvisited = pointsArr.slice();
+            let order = [];
+            let current = startPoint;
+            while (unvisited.length > 0) {
+                let minIdx = 0;
+                let minDist = current.distance(unvisited[0]);
+                for (let i = 1; i < unvisited.length; i++) {
+                    let d = current.distance(unvisited[i]);
+                    if (d < minDist) {
+                        minDist = d;
+                        minIdx = i;
+                    }
+                }
+                order.push(unvisited[minIdx]);
+                current = unvisited[minIdx];
+                unvisited.splice(minIdx, 1);
+            }
+            return order;
+        }
+
+        let bestOrder = middlePoints;
+        let minLen = Infinity;
+        if (middlePoints.length > 1 && middlePoints.length <= 5) { // 5以内全排列
+            let allOrders = permute(middlePoints);
+            for (let order of allOrders) {
+                let l = calcRouteLen(order);
+                if (l < minLen) {
+                    minLen = l;
+                    bestOrder = order;
+                }
+            }
+        } else if (middlePoints.length > 5) { // 超过5个用最近邻
+            bestOrder = nearestNeighbor(middlePoints);
+        }
+
+        // 构建路径点数组：起点-最优中间点顺序-终点
+        let routePoints = [startPoint, ...bestOrder, endPoint];
+        
         // 清除之前的路线
         if (currentRoutePolyline) {
             map.remove(currentRoutePolyline);
@@ -491,14 +546,4 @@ function calculateMultiPointRoute(points) {
     });
 }
 
-
-// 在地图点击时关闭当前信息窗体
-if (typeof map !== 'undefined') {
-    map.on('click', function() {
-        if (window.currentInfoWindow) {
-            window.currentInfoWindow.close();
-            window.currentInfoWindow = null;
-        }
-    });
-}
 //#endregion

@@ -70,7 +70,7 @@
         {
             "type": "Feature",
             "properties": {
-                "name": "卫生间",
+                "name": "卫生间1",
                 "category": "toilet"
             },
             "geometry": {
@@ -81,7 +81,7 @@
         {
             "type": "Feature",
             "properties": {
-                "name": "卫生间",
+                "name": "卫生间2",
                 "category": "toilet"
             },
             "geometry": {
@@ -92,7 +92,7 @@
         {
             "type": "Feature",
             "properties": {
-                "name": "卫生间",
+                "name": "卫生间3",
                 "category": "toilet"
             },
             "geometry": {
@@ -103,7 +103,7 @@
         {
             "type": "Feature",
             "properties": {
-                "name": "卫生间",
+                "name": "卫生间4",
                 "category": "toilet"
             },
             "geometry": {
@@ -114,7 +114,7 @@
         {
             "type": "Feature",
             "properties": {
-                "name": "卫生间",
+                "name": "卫生间5",
                 "category": "toilet"
             },
             "geometry": {
