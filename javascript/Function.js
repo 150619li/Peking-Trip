@@ -147,11 +147,8 @@ function removePoisFromMap(){
 // 添加景点标记到地图
 async function addPoisToMap(category = 'all') {
     // 清除之前的标记
-    if (currentMarkers.length > 0) {
-        map.remove(currentMarkers);
-        currentMarkers = [];
-    }
-
+    removePoisFromMap();
+    
     const markerStyles = {
         'toilet': {
             content: `<div style="background-color: #c03; width: 24px; height: 24px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
@@ -240,7 +237,7 @@ async function addPoisToMap(category = 'all') {
                         poiCategory === 'nature' ? '自然景观' : 
                         '文化设施'
                     }</p>
-                    <img src="${image}" alt="${name}" style="width:200px; margin:5px 0;"><br>
+                    <img loading="lazy" src="${image}" alt="${name}" style="width:200px; margin:5px 0;"><br>
                     <button id="add-to-selected" style="background:#4CAF50; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:3px; margin-top:5px;">添加到行程</button>
                     <p style="font-size:14px; line-height:1.5;">${description}</p>
                 </div>
@@ -250,7 +247,12 @@ async function addPoisToMap(category = 'all') {
 
         // 点击标记显示信息窗体
         marker.on('click', () => {
+            // 关闭之前的信息窗体
+            if (window.currentInfoWindow) {
+                window.currentInfoWindow.close();
+            }
             infoWindow.open(map, marker.getPosition());
+            window.currentInfoWindow = infoWindow;
 
             // 给"添加到行程"按钮添加事件
             setTimeout(() => {
@@ -490,4 +492,13 @@ function calculateMultiPointRoute(points) {
 }
 
 
+// 在地图点击时关闭当前信息窗体
+if (typeof map !== 'undefined') {
+    map.on('click', function() {
+        if (window.currentInfoWindow) {
+            window.currentInfoWindow.close();
+            window.currentInfoWindow = null;
+        }
+    });
+}
 //#endregion

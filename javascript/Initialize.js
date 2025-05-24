@@ -1,7 +1,7 @@
 // 全局变量，用于存储地图实例和状态
 let map;
 let isMapInitialized = false;
-let currentInfoWindow = null;
+
 // 初始化步行导航插件
 let walking;
 
@@ -147,12 +147,18 @@ function registerMapEvents() {
     
     // 点击事件监听
     map.on('click', function(e) {
-        if (currentInfoWindow) {
-            currentInfoWindow.close();
+        // 点击地图时关闭当前信息窗体
+        
+        if (window.currentInfoWindow) {
+            window.currentInfoWindow.close();
+            window.currentInfoWindow = null;
         }
-        if (e && e.lnglat) {
-           alert(`${e.lnglat.getLng()},${e.lnglat.getLat()}`);
+    
+        
+         if (e && e.lnglat) {
+          alert(`${e.lnglat.getLng()},${e.lnglat.getLat()}`);
         }
+        
     });
     
     // 缩放事件监听
