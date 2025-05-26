@@ -45,12 +45,12 @@ const _renderClusterMarker = function (context) {
     let factor = Math.pow(context.count / count, 1 / 18);
     let div = document.createElement('div');
     let Hue = 180 - factor * 180;
-    let bgColor = 'hsla(' + Hue + ',100%,100%,1)';
-    let fontColor = 'hsla(' + Hue + ',100%,50%,1)';
-    let borderColor = 'hsla(' + Hue + ',100%,0%,1)';
+    let bgColor = 'hsla(' + Hue + ',100%,100%,0.3)';
+    let fontColor = 'hsla(' + Hue + ',100%,50%,0.3)';
+    let borderColor = 'hsla(' + Hue + ',100%,0%,0.3)';
     let shadowColor = 'hsla(' + Hue + ',100%,10%,0.3)';
     div.style.backgroundColor = bgColor;
-    let size = Math.round(30 + Math.pow(context.count / count, 1 / 5) * 20);
+    let size = Math.round(15 + Math.pow(context.count / count, 1 / 5) * 20);
     div.style.width = div.style.height = size + 'px';
     div.style.border = `solid 1px ${borderColor}`;
     div.style.borderRadius = size / 2 + 'px';
@@ -63,12 +63,13 @@ const _renderClusterMarker = function (context) {
     div.style.textAlign = 'center';
     context.marker.setOffset(new AMap.Pixel(-size / 2, -size / 2));
     context.marker.setContent(div)
+    
+
 };
 
 // 未聚合的点的渲染方法
 const _renderMarker = function(context) {
     
-
     const image = `../sites/${context.data[0].name}.jpg`;        // 创建标记，使用对应类别的样式
     context.marker.setLabel(
             {
@@ -95,11 +96,11 @@ const _renderMarker = function(context) {
         // 创建信息窗体
         infoWindow = new AMap.InfoWindow({
             content: `
-                <div style="width:220px; max-height:180px; overflow:auto;">
+                <div style="width:220px; max-height:200px; overflow:auto;">
                     <h3 style="margin-top:5px;">${context.data[0].name}</h3>
-                    <img loading="lazy" src="${image}" alt="${context.data[0].name}" style="width:200px; margin:5px 0;"><br>
+                    <img loading="lazy" src="${image}" alt="${context.data[0].name}" style="width:200px; margin:5px,0;"><br>
                     <button id="add-to-selected" style="background:#4CAF50; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:3px; margin-top:5px;">添加到行程</button>
-                    <p style="font-size:14px; line-height:1.5;">${description}</p>
+                    <p style="font-size:8px; line-height:1.5;">${description}</p>
                 </div>
             `,
             offset: new AMap.Pixel(0, -30)
@@ -114,6 +115,7 @@ const _renderMarker = function(context) {
             });
             }
         });
+
         // 关闭之前的信息窗体
         if (window.currentInfoWindow) {
             window.currentInfoWindow.close();
@@ -161,7 +163,6 @@ const _renderMarker = function(context) {
             }
         }, 100);
     });
-        
 }
 
 
