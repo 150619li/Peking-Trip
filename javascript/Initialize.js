@@ -14,18 +14,16 @@ function initializeMap() {
         center: [116.310918, 39.992873],
         zoom: 15,
         mapStyle: 'amap://styles/normal',
-        
         viewMode: '3D',
-        
         optimizePanAnimation: true,
         showLabel: false, // 关闭默认标注
     };
-      map = new AMap.Map('map', mapOpts);
+    map = new AMap.Map('map', mapOpts);
     
     
     
     // 添加地图控件
-    map.plugin(['AMap.ToolBar', 'AMap.Scale', 'AMap.HawkEye', 'AMap.MapType','AMap.Walking','AMap.MarkerCluster','AMap.Icon'], function() {
+    map.plugin(['AMap.ToolBar', 'AMap.Scale', 'AMap.HawkEye', 'AMap.MapType','AMap.Walking','AMap.MarkerCluster','AMap.Icon','AMap.LngLat'], function() {
         // 工具条控件，默认位于地图右上角
         map.addControl(new AMap.ToolBar({
             position: 'LT',
@@ -65,17 +63,13 @@ function registerMapEvents() {
     // 点击事件监听
     map.on('click', function(e) {
         // 点击地图时关闭当前信息窗体
-        
         if (window.currentInfoWindow) {
             window.currentInfoWindow.close();
             window.currentInfoWindow = null;
         }
-    
-        
-         if (e && e.lnglat) {
-          alert(`${e.lnglat.getLng()},${e.lnglat.getLat()}`);
-        }
-        
+        //  if (e && e.lnglat) {
+        //   alert(`${e.lnglat.getLng()},${e.lnglat.getLat()}`);
+        // }
     });
     
     // 缩放事件监听
@@ -196,6 +190,70 @@ document.addEventListener('DOMContentLoaded', function() {
     // 添加定位按钮
     locateUser();
     // 添加景点标记
-    addPoisToMap('all');
+    fetch('../geojsonGCJ/points_of_interest.geojson')
+    .then(response => response.json())
+    .then(data => {
+        poiFeatures = data.features;
+        console.log('景点数据加载成功:', poiFeatures);
+        addPoisToMap('all', poiFeatures);
+    })
+    .catch(error => {
+        console.error('加载景点数据失败:', error);
+    });
+});
+// 标签页切换
+document.querySelectorAll('.tab-btn').forEach(button => {
+    button.addEventListener('click', () => {
+        // 移除所有活动状态
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelectorAll('.tab-pane').forEach(pane => {
+            pane.classList.remove('active');
+        });
+        
+        // 设置当前活动标签
+        button.classList.add('active');
+        const tabId = button.getAttribute('data-tab') + '-tab';
+        document.getElementById(tabId).classList.add('active');
+
+        addPoisToMap("all", poiFeatures);
+    });
+});
+
+// 景点分类筛选
+document.querySelectorAll('.category-btn').forEach(button => {
+    button.addEventListener('click', () => {
+        // 移除所有活动状态
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // 设置当前活动分类
+        button.classList.add('active');
+        const category = button.getAttribute('data-category');
+        
+        // 筛选景点列表
+        document.querySelectorAll('.poi-list li').forEach(item => {
+            if (category === 'all' || item.getAttribute('data-category') === category) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        addPoisToMap(category, poiFeatures);
+    });
+});
+
+// 搜索功能
+document.getElementById('search-btn').addEventListener('click', () => {
+    const searchText = document.getElementById('poi-search').value.toLowerCase();
     
+    document.querySelectorAll('.poi-list li').forEach(item => {
+        if (item.textContent.toLowerCase().includes(searchText)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
 });

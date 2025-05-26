@@ -1,22 +1,178 @@
 //#region 变量 
 
-// 全局变量，存储所有景点数据
-let poiFeatures = null;
 // 全局变量，存储当前路线polyline
+let poiFeatures = [];
 let currentRoutePolyline = null;
 let currentMarkers = [];
+// 聚合标记
+let markerCluster = null;
+const markerStyles = {
+    'toilet': {
+        content: `<div style="background-color: #c03; width: 24px; height: 24px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+                    <span style="color: white; font-weight: bold; font-size: 14px;">厕</span>
+                    </div>`,
+        offset: new AMap.Pixel(-12, -12)
+    },
+    'door': {
+        content: `<div style="background-color: #c03; width: 24px; height: 24px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+                    <span style="color: white; font-weight: bold; font-size: 14px;">门</span>
+                    </div>`,
+        offset: new AMap.Pixel(-12, -12)
+    },
+    'history': {
+        content: `<div style="background-color: #c03; width: 24px; height: 24px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+                    <span style="color: white; font-weight: bold; font-size: 14px;">史</span>
+                    </div>`,
+        offset: new AMap.Pixel(-12, -12)
+    },
+    'nature': {
+        content: `<div style="background-color: #090; width: 24px; height: 24px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+                    <span style="color: white; font-weight: bold; font-size: 14px;">自</span>
+                    </div>`,
+        offset: new AMap.Pixel(-12, -12)
+    },
+    'culture': {
+        content: `<div style="background-color: #06c; width: 24px; height: 24px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+                    <span style="color: white; font-weight: bold; font-size: 14px;">文</span>
+                    </div>`,
+        offset: new AMap.Pixel(-12, -12)
+    }
+};
+const count = 65
+// 这个参考官方实例修改的
+// 聚合点的渲染方法
+const _renderClusterMarker = function (context) {
+    let factor = Math.pow(context.count / count, 1 / 18);
+    let div = document.createElement('div');
+    let Hue = 180 - factor * 180;
+    let bgColor = 'hsla(' + Hue + ',100%,100%,1)';
+    let fontColor = 'hsla(' + Hue + ',100%,50%,1)';
+    let borderColor = 'hsla(' + Hue + ',100%,0%,1)';
+    let shadowColor = 'hsla(' + Hue + ',100%,10%,0.3)';
+    div.style.backgroundColor = bgColor;
+    let size = Math.round(30 + Math.pow(context.count / count, 1 / 5) * 20);
+    div.style.width = div.style.height = size + 'px';
+    div.style.border = `solid 1px ${borderColor}`;
+    div.style.borderRadius = size / 2 + 'px';
+    div.style.boxShadow = `2px 2px 5px ${shadowColor}`;
+    div.innerHTML = context.count;
+    div.style.lineHeight = size + 'px';
+    div.style.color = fontColor;
+    div.style.fontSize = '18px';
+    div.style.fontWeight = 'bold';
+    div.style.textAlign = 'center';
+    context.marker.setOffset(new AMap.Pixel(-size / 2, -size / 2));
+    context.marker.setContent(div)
+};
 
-//#endregion
+// 未聚合的点的渲染方法
+const _renderMarker = function(context) {
+    
 
-//#region 初始化
+    const image = `../sites/${context.data[0].name}.jpg`;        // 创建标记，使用对应类别的样式
+    context.marker.setLabel(
+            {
+                offset: new AMap.Pixel(1, -1),
+                content: context.data[0].name,
+                direction: 'right',
+            })
+    context.marker.setContent(markerStyles[context.data[0].category].content);
 
-// 初始化事件
+    // 点击标记显示信息窗体
+    context.marker.on('click', () => {
+        // 获取景点描述
+        let description = '';
+        try {
+            const response = fetch(`../sites/${context.data[0].name}.txt`);
+            if (response.ok) {
+                description = response.text();
+            } else {
+                description = '暂无介绍';
+            }
+        } catch (e) {
+            description = '暂无介绍';
+        }
+        // 创建信息窗体
+        infoWindow = new AMap.InfoWindow({
+            content: `
+                <div style="width:220px; max-height:180px; overflow:auto;">
+                    <h3 style="margin-top:5px;">${context.data[0].name}</h3>
+                    <img loading="lazy" src="${image}" alt="${context.data[0].name}" style="width:200px; margin:5px 0;"><br>
+                    <button id="add-to-selected" style="background:#4CAF50; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:3px; margin-top:5px;">添加到行程</button>
+                    <p style="font-size:14px; line-height:1.5;">${description}</p>
+                </div>
+            `,
+            offset: new AMap.Pixel(0, -30)
+        });
+
+        // 鼠标滚轮事件用于上下滚动infoWindow内容
+        infoWindow.on('open', () => {
+            const infoWindowContent = document.querySelector('.amap-info-content');
+            if (infoWindowContent) {
+            infoWindowContent.addEventListener('wheel', (event) => {
+                event.stopPropagation(); // 阻止地图缩放
+            });
+            }
+        });
+        // 关闭之前的信息窗体
+        if (window.currentInfoWindow) {
+            window.currentInfoWindow.close();
+        }
+        infoWindow.open(map, context.marker.getPosition());
+        window.currentInfoWindow = infoWindow;
+
+        // 给"添加到行程"按钮添加事件
+        setTimeout(() => {
+            const addBtn = document.getElementById('add-to-selected');
+            if (addBtn) {
+                addBtn.onclick = () => {
+                    var selectedList = document.getElementById('selected-list');
+                    
+                    // 检查是否已添加
+                    let isDuplicate = false;
+                    selectedList.querySelectorAll('li').forEach(existingItem => {
+                        if (existingItem.textContent.replace(' ×', '').trim() === name.trim()) {
+                            isDuplicate = true;
+                        }
+                    });
+                    
+                    if (!isDuplicate) {
+                        const newItem = document.createElement('li');
+                        newItem.textContent = context.data[0].name;
+                        
+                        // 添加删除按钮
+                        const deleteBtn = document.createElement('span');
+                        deleteBtn.textContent = ' ×';
+                        deleteBtn.className = 'delete-btn';
+                        deleteBtn.style.color = 'red';
+                        deleteBtn.style.cursor = 'pointer';
+                        deleteBtn.style.marginLeft = '5px';
+                        deleteBtn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            newItem.remove();
+                        });
+                        
+                        newItem.appendChild(deleteBtn);
+                        selectedList.appendChild(newItem);
+                    }
+                    
+                    infoWindow.close();
+                };
+            }
+        }, 100);
+    });
+        
+}
+
+
+//#region 函数
+
 document.addEventListener('DOMContentLoaded', async function() {
     // 加载GeoJSON数据
     try {
         const response = await fetch('../geojsonGCJ/points_of_interest.geojson');
         const geojsonData = await response.json();
-        poiFeatures = geojsonData.features;
+        const poifeatures = geojsonData.features;
         
         // 初始化清空按钮
         initClearButton();
@@ -28,7 +184,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         const scenicList = document.querySelector('.scenic-list ul');
         if (scenicList) {
             scenicList.innerHTML = '';
-            poiFeatures.forEach(feature => {
+            poifeatures.forEach(feature => {
+                if (!['history', 'nature', 'culture'].includes(feature.properties.category)) {
+                    return;
+                }
                 const li = document.createElement('li');
                 li.textContent = feature.properties.name;
                 li.setAttribute('data-category', feature.properties.category);
@@ -42,7 +201,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         const poilist = document.querySelector('.poi-list ul');
         if (poilist) {
             poilist.innerHTML = '';
-            poiFeatures.forEach(feature => {
+            poifeatures.forEach(feature => {
                 const li = document.createElement('li');
                 li.textContent = feature.properties.name;
                 li.setAttribute('data-category', feature.properties.category);
@@ -50,15 +209,11 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
         }
 
-        addPoisToMap('all');
-
     } catch (error) {
         console.error('加载景点数据失败:', error);
     }
 });
-//#endregion
 
-//#region 函数
 // 为景点列表添加双击事件
 function initScenicListEvents() {
     document.querySelectorAll('.scenic-list ul li').forEach(function(item) {
@@ -136,176 +291,37 @@ function searchPoint(target) {
     });
 }
 
-//清除地图上的标记
-function removePoisFromMap(){
-    if (currentMarkers.length > 0) {
-        map.remove(currentMarkers);
-        currentMarkers = [];
-    }
-}
-
 // 添加景点标记到地图
-async function addPoisToMap(category = 'all') {
-    // 清除之前的标记
-    removePoisFromMap();
-    
-    const markerStyles = {
-        'toilet': {
-            content: `<div style="background-color: #c03; width: 24px; height: 24px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
-                        <span style="color: white; font-weight: bold; font-size: 14px;">厕</span>
-                     </div>`,
-            offset: new AMap.Pixel(-12, -12)
-        },
-        'door': {
-            content: `<div style="background-color: #c03; width: 24px; height: 24px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
-                        <span style="color: white; font-weight: bold; font-size: 14px;">门</span>
-                     </div>`,
-            offset: new AMap.Pixel(-12, -12)
-        },
-        'history': {
-            content: `<div style="background-color: #c03; width: 24px; height: 24px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
-                        <span style="color: white; font-weight: bold; font-size: 14px;">史</span>
-                     </div>`,
-            offset: new AMap.Pixel(-12, -12)
-        },
-        'nature': {
-            content: `<div style="background-color: #090; width: 24px; height: 24px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
-                        <span style="color: white; font-weight: bold; font-size: 14px;">自</span>
-                     </div>`,
-            offset: new AMap.Pixel(-12, -12)
-        },
-        'culture': {
-            content: `<div style="background-color: #06c; width: 24px; height: 24px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
-                        <span style="color: white; font-weight: bold; font-size: 14px;">文</span>
-                     </div>`,
-            offset: new AMap.Pixel(-12, -12)
-        }
-    };
-
-    // 筛选符合类别的景点
-    const filteredFeatures = poiFeatures.filter(feature => 
-        category === 'all' || feature.properties.category === category
-    );
-
-    for (const feature of filteredFeatures) {
-        const name = feature.properties.name;
-        const coords = feature.geometry.coordinates;
-        const poiCategory = feature.properties.category;
-
-        // 获取景点描述
-        let description = '';
-        try {
-            const response = await fetch(`../sites/${name}.txt`);
-            if (response.ok) {
-                description = await response.text();
-            } else {
-                description = '暂无介绍';
-            }
-        } catch (e) {
-            description = '暂无介绍';
-        }
-
-        const image = `../sites/${name}.jpg`;        // 创建标记，使用对应类别的样式
-        const marker = new AMap.Marker({
-            position: coords,
-            title: name,
-            content: markerStyles[poiCategory].content,
-            offset: markerStyles[poiCategory].offset,
-            label: {
-                offset: new AMap.Pixel(1, -1),
-                content: name,
-                direction: 'right',
-                
-            }
-        });
-
-        // 创建信息窗体
-        const infoWindow = new AMap.InfoWindow({
-            content: `
-                <div style="width:220px; max-height:180px; overflow:auto;">
-                    <h3 style="margin-top:5px;">${name}</h3>
-                    <p style="margin:5px 0; color: ${
-                        poiCategory === 'toilet' ? '#c03' :
-                        poiCategory === 'door' ? '#c03' :
-                        poiCategory === 'history' ? '#c03' : 
-                        poiCategory === 'nature' ? '#090' : 
-                        '#06c'
-                    }">类别：${
-                        poiCategory === 'toilet' ? '厕所' :
-                        poiCategory === 'door' ? '门' :
-                        poiCategory === 'history' ? '历史建筑' : 
-                        poiCategory === 'nature' ? '自然景观' : 
-                        '文化设施'
-                    }</p>
-                    <img loading="lazy" src="${image}" alt="${name}" style="width:200px; margin:5px 0;"><br>
-                    <button id="add-to-selected" style="background:#4CAF50; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:3px; margin-top:5px;">添加到行程</button>
-                    <p style="font-size:14px; line-height:1.5;">${description}</p>
-                </div>
-            `,
-            offset: new AMap.Pixel(0, -30)
-        });
-
-        // 点击标记显示信息窗体
-        marker.on('click', () => {
-            // 关闭之前的信息窗体
-            if (window.currentInfoWindow) {
-                window.currentInfoWindow.close();
-            }
-            infoWindow.open(map, marker.getPosition());
-            window.currentInfoWindow = infoWindow;
-
-            // 给"添加到行程"按钮添加事件
-            setTimeout(() => {
-                const addBtn = document.getElementById('add-to-selected');
-                if (addBtn) {
-                    addBtn.onclick = () => {
-                        var selectedList = document.getElementById('selected-list');
-                        
-                        // 检查是否已添加
-                        let isDuplicate = false;
-                        selectedList.querySelectorAll('li').forEach(existingItem => {
-                            if (existingItem.textContent.replace(' ×', '').trim() === name.trim()) {
-                                isDuplicate = true;
-                            }
-                        });
-                        
-                        if (!isDuplicate) {
-                            const newItem = document.createElement('li');
-                            newItem.textContent = name;
-                            
-                            // 添加删除按钮
-                            const deleteBtn = document.createElement('span');
-                            deleteBtn.textContent = ' ×';
-                            deleteBtn.className = 'delete-btn';
-                            deleteBtn.style.color = 'red';
-                            deleteBtn.style.cursor = 'pointer';
-                            deleteBtn.style.marginLeft = '5px';
-                            deleteBtn.addEventListener('click', function(e) {
-                                e.stopPropagation();
-                                newItem.remove();
-                            });
-                            
-                            newItem.appendChild(deleteBtn);
-                            selectedList.appendChild(newItem);
-                        }
-                        
-                        infoWindow.close();
-                    };
-                }
-            }, 100);
-        });
-
-        currentMarkers.push(marker);
+function addPoisToMap(category = 'all', poiFeatures = []) {
+    // 每次重绘前删除现有的聚合标记
+    if (markerCluster) {
+        markerCluster.setMap(null); // 解除与地图的关联
+        markerCluster.setData(null);
+        markerCluster = null; // 释放引用
     }
 
-    // 添加标记到地图
-    if (currentMarkers.length > 0) {
-        map.add(currentMarkers);
-        map.setFitView(currentMarkers);
-    } else {
-        alert('没有找到符合条件的景点');
-    }
+    // 转换GeoJSON数据为点集
+    const points = poiFeatures.map(feature => ({
+        name: feature.properties.name,
+        lnglat: new AMap.LngLat(feature.geometry.coordinates[0], feature.geometry.coordinates[1]),
+        category: feature.properties.category,
+        position: feature.geometry.coordinates,
+        type: feature.geometry.type,
+        weight: 1
+    }));
+    console.log('转换后的点集:', points);
 
+    // 根据category筛选点
+    const filteredPoints = category === 'all' 
+        ? points 
+        : points.filter(point => point.category === category);
+
+    // 将标记添加到地图
+    markerCluster = new AMap.MarkerClusterer(map, filteredPoints, {
+        gridSize: 30,
+        renderClusterMarker: _renderClusterMarker, // 自定义聚合点样式
+        renderMarker: _renderMarker, // 自定义非聚合点样式
+    });
 }
 
 // 初始化清空按钮
@@ -337,7 +353,7 @@ function initClearButton() {
 function planRoute() {
     const startText = document.getElementById('start').value;
     const endText = document.getElementById('end').value;
-    const timeText = document.getElementById('time').value;
+    
 
     if (!startText || !endText) {
         alert('请填写起点和终点');
@@ -526,7 +542,8 @@ function calculateMultiPointRoute(points) {
             strokeColor: "#3366FF",
             strokeWeight: 6,
             strokeOpacity: 0.9,
-            lineJoin: 'round'
+            lineJoin: 'round',
+            showDir: true
         });
         
         map.add(currentRoutePolyline);
