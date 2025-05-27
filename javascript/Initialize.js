@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 添加定位按钮
     locateUser();
     // 添加景点标记
-    fetch('../geojsonGCJ/points_of_interest.geojson')
+    fetch('./geojsonGCJ/points_of_interest.geojson')
     .then(response => response.json())
     .then(data => {
         poiFeatures = data.features;

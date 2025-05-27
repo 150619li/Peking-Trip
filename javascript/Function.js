@@ -188,7 +188,7 @@ const _renderMarker = function(context) {
 document.addEventListener('DOMContentLoaded', async function() {
     // 加载GeoJSON数据
     try {
-        const response = await fetch('../geojsonGCJ/points_of_interest.geojson');
+        const response = await fetch('./geojsonGCJ/points_of_interest.geojson');
         const geojsonData = await response.json();
         const poifeatures = geojsonData.features;
         
