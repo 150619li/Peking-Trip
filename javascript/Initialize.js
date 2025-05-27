@@ -23,7 +23,7 @@ function initializeMap() {
     
     
     // 添加地图控件
-    map.plugin(['AMap.ToolBar', 'AMap.Scale', 'AMap.HawkEye', 'AMap.MapType','AMap.Walking','AMap.DistrictSearch','AMap.MarkerCluster','AMap.Icon','AMap.LngLat'], function() {
+    map.plugin(['AMap.ToolBar', 'AMap.Scale', 'AMap.HawkEye', 'AMap.MapType','AMap.Geocoder','AMap.Walking','AMap.DistrictSearch','AMap.MarkerCluster','AMap.Icon','AMap.LngLat'], function() {
         // 工具条控件，默认位于地图右上角
         map.addControl(new AMap.ToolBar({
             position: 'LT',

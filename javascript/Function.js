@@ -461,12 +461,12 @@ function searchPoint(target) {
         
         geocoder.getLocation(target, function (status, result) {
             if (status === 'complete' && result.geocodes.length > 0) {
-                let location = result.geocodes[0].location;
-                console.log(`${target}经纬度:`, location.lng, location.lat);
-                resolve(location);
+            let location = result.geocodes[0].location;
+            console.log(`${target}经纬度:`, location.lng, location.lat);
+            resolve(location);
             } else {
-                console.error(`无法获取${target}的经纬度`);
-                reject(`无法获取${target}的经纬度，请更换关键词再试`);
+            console.error(`无法获取${target}的经纬度`);
+            reject(`无法获取${target}的经纬度，请更换关键词再试`);
             }
         });
     });
