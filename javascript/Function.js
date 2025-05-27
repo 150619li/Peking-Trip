@@ -79,7 +79,7 @@ const _renderClusterMarker = function (context) {
 
 // 获取景点描述并返回Promise
 function fetchDescription(name) {
-  return fetch(`../sites/${name}.txt`)
+  return fetch(`sites/${name}.txt`)
     .then(response => {
       if (response.ok) {
         return response.text();
@@ -95,7 +95,7 @@ function fetchDescription(name) {
 // 未聚合的点的渲染方法
 const _renderMarker = function(context) {
     
-    const image = `../sites/${context.data[0].name}.jpg`;        // 创建标记，使用对应类别的样式
+    const image = `sites/${context.data[0].name}.jpg`;        // 创建标记，使用对应类别的样式
     
     context.marker.setLabel(
             {
@@ -188,7 +188,7 @@ const _renderMarker = function(context) {
 document.addEventListener('DOMContentLoaded', async function() {
     // 加载GeoJSON数据
     try {
-        const response = await fetch('./geojsonGCJ/points_of_interest.geojson');
+        const response = await fetch('geojsonGCJ/points_of_interest.geojson');
         const geojsonData = await response.json();
         const poifeatures = geojsonData.features;
         
