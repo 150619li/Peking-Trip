@@ -23,7 +23,7 @@ function initializeMap() {
     
     
     // 添加地图控件
-    map.plugin(['AMap.ToolBar', 'AMap.Scale', 'AMap.HawkEye', 'AMap.MapType','AMap.Walking','AMap.MarkerCluster','AMap.Icon','AMap.LngLat'], function() {
+    map.plugin(['AMap.ToolBar', 'AMap.Scale', 'AMap.HawkEye', 'AMap.MapType','AMap.Walking','AMap.DistrictSearch','AMap.MarkerCluster','AMap.Icon','AMap.LngLat'], function() {
         // 工具条控件，默认位于地图右上角
         map.addControl(new AMap.ToolBar({
             position: 'LT',
@@ -38,12 +38,7 @@ function initializeMap() {
         // 鹰眼控件，显示缩略图
         map.addControl(new AMap.HawkEye({
             isOpen: false
-        }));
-        
-        // 地图类型切换控件
-        map.addControl(new AMap.MapType({
-            defaultType: 0 // 默认显示普通地图
-        }));        
+        }));       
         
         // 初始化步行导航插件，不直接在地图上显示路线
         walking = new AMap.Walking({
@@ -67,8 +62,8 @@ function registerMapEvents() {
             window.currentInfoWindow.close();
             window.currentInfoWindow = null;
         }
-        //  if (e && e.lnglat) {
-        //   alert(`${e.lnglat.getLng()},${e.lnglat.getLat()}`);
+        // if (e && e.lnglat) {
+        //     alert(`${e.lnglat.getLng()},${e.lnglat.getLat()}`);
         // }
     });
     
@@ -131,7 +126,6 @@ function locateUser() {
         locateBtn.addEventListener('click', function() {
             navigator.geolocation.getCurrentPosition(function(position) {
                 const currentPos = [position.coords.longitude, position.coords.latitude];
-                
                 // 将点转换为GCJ02坐标系
                 AMap.convertFrom(currentPos, 'gps', function(status, result) {
                     if (status === 'complete' && result.locations && result.locations.length > 0) {
@@ -200,6 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
     .catch(error => {
         console.error('加载景点数据失败:', error);
     });
+
 });
 // 标签页切换
 document.querySelectorAll('.tab-btn').forEach(button => {
