@@ -5,6 +5,8 @@ let isMapInitialized = false;
 // 初始化步行导航插件
 let walking;
 
+let geocoder;
+
 // 初始化高德地图
 function initializeMap() {
     if (isMapInitialized) return;
@@ -45,7 +47,11 @@ function initializeMap() {
             map: null,  // 不在地图上显示
             autoFitView: false
         });
-
+        
+        geocoder = new AMap.Geocoder({
+            city: "北京",
+            radius: 1000
+        });
     });
     
     isMapInitialized = true;

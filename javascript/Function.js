@@ -454,11 +454,6 @@ function searchPoint(target) {
             return;
         }
         
-        let geocoder = new AMap.Geocoder({
-            city: "北京",
-            radius: 1000
-        });
-        
         geocoder.getLocation(target, function (status, result) {
             if (status === 'complete' && result.geocodes.length > 0) {
             let location = result.geocodes[0].location;
