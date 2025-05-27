@@ -353,7 +353,7 @@ function initPoiListEvents() {
     document.querySelectorAll('.poi-list ul li').forEach(function(item) {
         item.addEventListener('mouseover', function() {
             const poiName = item.textContent.replace('添加到行程', '').trim();
-            const image = `../sites/${poiName}.jpg`;
+            const image = `sites/${poiName}.jpg`;
 
             fetchDescription(poiName).then(description => {
                 
