@@ -258,3 +258,10 @@ document.getElementById('search-btn').addEventListener('click', () => {
         }
     });
 });
+
+document.getElementById('clear-selected').addEventListener('click', () => {
+    const selectedList = document.getElementById('selected-list');
+    selectedList.innerHTML = '';
+    isfinished= false;
+    addPoisToMap("all", poiFeatures);
+});

@@ -5,6 +5,7 @@ let poiFeatures = [];
 let currentRoutePolyline = null;
 // 聚合标记
 let markerCluster = null;
+let isfinished = false; // 是否已完成路线规划
 
 const markerStyles = {
     'toilet': {
@@ -191,9 +192,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         const response = await fetch('geojsonGCJ/points_of_interest.geojson');
         const geojsonData = await response.json();
         const poifeatures = geojsonData.features;
-        
-        // 初始化清空按钮
-        initClearButton();
         
         // 规划路线按钮事件
         document.getElementById('planRouteBtn').addEventListener('click', planRoute);
@@ -475,7 +473,7 @@ function addPoisToMap(category = 'all', poiFeatures = []) {
         markerCluster.setData(null);
         markerCluster = null; // 释放引用
     }
-
+    
     // 转换GeoJSON数据为点集
     const points = poiFeatures.map(feature => ({
         name: feature.properties.name,
@@ -487,44 +485,40 @@ function addPoisToMap(category = 'all', poiFeatures = []) {
     }));
     console.log('转换后的点集:', points);
 
+    var filteredPoints;
     // 根据category筛选点
-    const filteredPoints = category === 'all' 
+    filteredPoints = category === 'all' 
         ? points 
         : points.filter(point => point.category === category);
 
+    if(isfinished) {
+        const selectedItems = document.querySelectorAll('#selected-list li');
+        const selectedPoints = [];
+        selectedItems.forEach(function(li) {
+            // 去除删除按钮的文本
+            const name = li.textContent.replace(' ×', '').trim();
+            const feature = poiFeatures.find(f => f.properties.name === name);
+            if (feature) {
+                selectedPoints.push(name);
+            }
+        });
+        const startText = document.getElementById('start').value;
+        const endText = document.getElementById('end').value;
+
+        filteredPoints = points.filter(point => {
+            return selectedPoints.includes(point.name) || point.name === startText || point.name === endText;
+        });
+
+    }
     // 将标记添加到地图
     markerCluster = new AMap.MarkerClusterer(map, filteredPoints, {
         gridSize: 30,
         renderClusterMarker: _renderClusterMarker, // 自定义聚合点样式
         renderMarker: _renderMarker, // 自定义非聚合点样式
     });
-}
-
-// 初始化清空按钮
-function initClearButton() {
-    const buttonContainer = document.querySelector('.scenic-list > div:nth-child(2)');
     
-    if (!document.getElementById('clear-selected')) {
-        const clearButton = document.createElement('button');
-        clearButton.id = 'clear-selected';
-        clearButton.textContent = '清空列表';
-        clearButton.style.marginTop = '10px';
-        clearButton.style.padding = '5px 10px';
-        clearButton.style.backgroundColor = '#f44336';
-        clearButton.style.color = 'white';
-        clearButton.style.border = 'none';
-        clearButton.style.borderRadius = '4px';
-        clearButton.style.cursor = 'pointer';
-        
-        clearButton.addEventListener('click', function() {
-            const selectedList = document.getElementById('selected-list');
-            selectedList.innerHTML = '';
-        });
-        
-        buttonContainer.appendChild(clearButton);
-    }
 }
-
+ 
 // 规划路线
 function planRoute() {
     const startText = document.getElementById('start').value;
@@ -782,6 +776,9 @@ function calculateMultiPointRoute(points) {
             景点数量: ${points.length - 2} 个
         `;
         document.getElementById('map').appendChild(infoDiv);
+
+        isfinished = true; // 设置为已完成状态
+        addPoisToMap('all', poiFeatures); // 重新绘制所有点
         
     }).catch(function(error) {
         console.error(error);

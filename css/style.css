@@ -347,36 +347,4 @@ body {
 }
 
 
-/* 响应式调整 */
-@media (max-width: 992px) {
-    .content {
-        flex-direction: column;
-    }
-    
-    #map, .info-panel {
-        width: 100%;
-        max-width: none;
-    }
-    
-    #map {
-        height: 300px;
-        min-height: auto;
-    }
-}
-
-@media (max-width: 576px) {
-    .header {
-        padding: 10px 15px;
-    }
-    
-    .tabs {
-        overflow-x: auto;
-    }
-    
-    .tab-btn {
-        padding: 10px 15px;
-        font-size: 14px;
-        white-space: nowrap;
-    }
-}
 
