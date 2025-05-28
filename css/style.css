@@ -370,6 +370,7 @@ body {
 
     #map {
         min-height: 300px;
+        order: -1; /* 将地图放在上方 */
     }
 
     .info-panel {
@@ -421,8 +422,7 @@ body {
     }
 
     .footer {
-        font-size: 14px;
-        padding: 10px 0;
+        display: none;
     }
 }
 
