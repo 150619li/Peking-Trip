@@ -224,19 +224,28 @@ body {
     font-size: 14px;
 }
 
-#search-btn {
-    padding: 0 15px;
+.btn {
+    display: flex;
+    gap: 10px; /* 增加按钮之间的间距 */
+}
+
+#planRouteBtn, #startNavigationBtn {
+    flex: 1; /* 让两个按钮等宽 */
+    padding: 12px;
     background-color: #91242c;
     color: white;
     border: none;
-    border-radius: 0 4px 4px 0;
+    border-radius: 4px;
     cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
     transition: background-color 0.3s;
 }
 
-#search-btn:hover {
+#planRouteBtn:hover, #startNavigationBtn:hover {
     background-color: #7a1f26;
 }
+
 
 .poi-categories {
     display: flex;

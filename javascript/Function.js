@@ -6,6 +6,7 @@ let currentRoutePolyline = null;
 // 聚合标记
 let markerCluster = null;
 let isfinished = false; // 是否已完成路线规划
+let isinnavigate = false; // 是否正在导航
 
 const markerStyles = {
     'toilet': {
@@ -229,6 +230,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         // 规划路线按钮事件
         document.getElementById('planRouteBtn').addEventListener('click', planRoute);
+        // 导航按钮事件
+        document.getElementById('startNavigationBtn').addEventListener('click', navigatestart);
         
         // 添加景点到列表
         const scenicList = document.querySelector('.scenic-list ul');
@@ -586,7 +589,68 @@ function addPoisToMap(category = 'all', poiFeatures = []) {
     });
     
 }
- 
+function navigatestart(){
+    if(!isinnavigate){
+        navigate();
+        document.getElementById('startNavigationBtn').textContent = isinnavigate ? '开始导航' : '停止导航';
+        isinnavigate = true;
+    }
+    else{
+        document.getElementById('startNavigationBtn').textContent = isinnavigate ? '开始导航' : '停止导航';
+        map.setPitch(0);
+        map.setRotation(0);
+        map.setFitView(currentRoutePolyline);
+        isinnavigate = false; 
+    }
+} 
+
+
+//路径导航
+function navigate(){
+    if (!userlocate) {
+        console.error('用户位置未定义');
+        return;
+    }
+    const path = currentRoutePolyline.getPath();
+    // 找到与用户位置最近的点的索引
+    let nearestIndex = -1;
+    let minDistance = Infinity;
+
+    path.forEach((point, index) => {
+        const distance = userlocate.distance(point);
+        if (distance < minDistance) {
+            minDistance = distance;
+            nearestIndex = index;
+        }
+    });
+
+    console.log(`与用户位置最近的点索引: ${nearestIndex}, 距离: ${minDistance}`);
+
+    if (nearestIndex !== -1 && nearestIndex < path.length - 1) {
+        const nextPoint = path[nearestIndex + 1];
+        const nearestPoint = path[nearestIndex];
+        const angle = Math.atan2(
+            nextPoint.lat - nearestPoint.lat,
+            nextPoint.lng - nearestPoint.lng
+        ) * (180 / Math.PI);
+        // 绘制用户位置到最近点的虚线
+        const dashedLine = new AMap.Polyline({
+            path: [userlocate, nearestPoint],
+            strokeColor: "#FF0000",
+            strokeWeight: 3,
+            strokeStyle: "dashed",
+            lineDash: [10, 5], // 设置虚线样式
+        });
+        map.add(dashedLine);
+        map.setPitch(60); // 设置地图的俯仰角为60度
+        map.setRotation(angle-90); // 设置地图视角转向连线方向
+        map.setZoomAndCenter(20, nearestPoint); // 聚焦到用户位置
+    } else {
+        console.error('无法找到下一点或用户位置附近的点');
+    }
+}
+
+
 // 规划路线
 function planRoute() {
     const startText = document.getElementById('start').value;
@@ -941,6 +1005,7 @@ function calculateMultiPointRoute(points) {
 
         isfinished = true; // 设置为已完成状态
         addPoisToMap('all', poiFeatures); // 重新绘制所有点
+
         
     }).catch(function(error) {
         console.error(error);

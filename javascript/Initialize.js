@@ -148,7 +148,6 @@ function locateUser() {
                 // 创建当前位置标记
                 const locationMarker = new AMap.Marker({
                     position: gcj02Pos,
-                    
                     title: '当前位置',
                 });
 
@@ -269,7 +268,13 @@ document.getElementById('clear-selected').addEventListener('click', () => {
     addPoisToMap("all", poiFeatures);
 });
 
+if (navigator.geolocation){
 // 每十秒自动定位一次
 setInterval(() => {
-    locateUser();
-}, 1000);
+        locateUser();
+
+        if(isinnavigate){
+            navigate();
+        }
+    }, 1000);
+}
