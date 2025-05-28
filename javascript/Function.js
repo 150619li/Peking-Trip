@@ -173,6 +173,40 @@ const _renderMarker = function(context) {
                     
                     newItem.appendChild(deleteBtn);
                     selectedList.appendChild(newItem);
+                    // 提醒添加完成
+                        const notification = document.createElement('div');
+                        notification.textContent = '已添加到行程';
+                        notification.style.position = 'fixed';
+                        notification.style.bottom = '20px';
+                        notification.style.right = '20px';
+                        notification.style.backgroundColor = '#4CAF50';
+                        notification.style.color = 'white';
+                        notification.style.padding = '10px 20px';
+                        notification.style.borderRadius = '5px';
+                        notification.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.2)';
+                        notification.style.zIndex = '1000';
+                        document.body.appendChild(notification);
+
+                        setTimeout(() => {
+                            notification.remove();
+                        }, 800);
+                    } else {
+                        const notification = document.createElement('div');
+                        notification.textContent = '已在行程中';
+                        notification.style.position = 'fixed';
+                        notification.style.bottom = '20px';
+                        notification.style.right = '20px';
+                        notification.style.backgroundColor = '#4CAF50';
+                        notification.style.color = 'white';
+                        notification.style.padding = '10px 20px';
+                        notification.style.borderRadius = '5px';
+                        notification.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.2)';
+                        notification.style.zIndex = '1000';
+                        document.body.appendChild(notification);
+
+                        setTimeout(() => {
+                            notification.remove();
+                        }, 800);
                     }
                     
                     infoWindow.close();
@@ -341,6 +375,40 @@ function initScenicListEvents() {
                 
                 newItem.appendChild(deleteBtn);
                 selectedList.appendChild(newItem);
+                // 提醒添加完成
+                const notification = document.createElement('div');
+                notification.textContent = '已添加到行程';
+                notification.style.position = 'fixed';
+                notification.style.bottom = '20px';
+                notification.style.right = '20px';
+                notification.style.backgroundColor = '#4CAF50';
+                notification.style.color = 'white';
+                notification.style.padding = '10px 20px';
+                notification.style.borderRadius = '5px';
+                notification.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.2)';
+                notification.style.zIndex = '1000';
+                document.body.appendChild(notification);
+
+                setTimeout(() => {
+                    notification.remove();
+                }, 800);
+            } else {
+                const notification = document.createElement('div');
+                notification.textContent = '已在行程中';
+                notification.style.position = 'fixed';
+                notification.style.bottom = '20px';
+                notification.style.right = '20px';
+                notification.style.backgroundColor = '#4CAF50';
+                notification.style.color = 'white';
+                notification.style.padding = '10px 20px';
+                notification.style.borderRadius = '5px';
+                notification.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.2)';
+                notification.style.zIndex = '1000';
+                document.body.appendChild(notification);
+
+                setTimeout(() => {
+                    notification.remove();
+                }, 800);
             }
         });
     });
@@ -553,97 +621,191 @@ function planRoute() {
     console.log('选中的景点：', selectedPoints);
     
     // 先获取起点和终点坐标
-    Promise.all([
-        searchPoint(startText),
-        searchPoint(endText)
-    ]).then(function(results) {
-        const startPoint = results[0];
-        const endPoint = results[1];
-        
-        // 构建中间景点坐标数组
-        let middlePoints = [];
-        selectedPoints.forEach(point => {
-            const feature = poiFeatures.find(f => f.properties.name === point);
-            if (feature) {
-                const coords = feature.geometry.coordinates;
-                middlePoints.push(new AMap.LngLat(coords[0], coords[1]));
-            }
-        });
+    if (startText!=null && startText.trim() !== '') {
+        Promise.all([
+            searchPoint(startText),
+            searchPoint(endText)
+        ]).then(function(results) {
+            const startPoint = results[0];
+            const endPoint = results[1];
 
-        // TSP优化：根据中间点数量选择算法，最小化重复路线
-        function permute(arr) {
-            if (arr.length <= 1) return [arr];
-            let result = [];
-            for (let i = 0; i < arr.length; i++) {
-            let rest = arr.slice(0, i).concat(arr.slice(i + 1));
-            let restPerm = permute(rest);
-            for (let perm of restPerm) {
-                result.push([arr[i]].concat(perm));
-            }
-            }
-            return result;
-        }
-
-        function calcRouteOverlap(pointsArr) {
-            let overlap = 0;
-            let prev = startPoint;
-            for (let p of pointsArr) {
-            overlap += prev.distance(p);
-            prev = p;
-            }
-            overlap += prev.distance(endPoint);
-            return overlap;
-        }
-
-        // 最近邻启发式算法，最小化重复路线
-        function nearestNeighborMinOverlap(pointsArr) {
-            let unvisited = pointsArr.slice();
-            let order = [];
-            let current = startPoint;
-            while (unvisited.length > 0) {
-            let minIdx = 0;
-            let minDist = current.distance(unvisited[0]);
-            for (let i = 1; i < unvisited.length; i++) {
-                let d = current.distance(unvisited[i]);
-                if (d < minDist) {
-                minDist = d;
-                minIdx = i;
+            // 构建中间景点坐标数组
+            let middlePoints = [];
+            selectedPoints.forEach(point => {
+                const feature = poiFeatures.find(f => f.properties.name === point);
+                if (feature) {
+                    const coords = feature.geometry.coordinates;
+                    middlePoints.push(new AMap.LngLat(coords[0], coords[1]));
                 }
-            }
-            order.push(unvisited[minIdx]);
-            current = unvisited[minIdx];
-            unvisited.splice(minIdx, 1);
-            }
-            return order;
-        }
+            });
 
-        let bestOrder = middlePoints;
-        let minOverlap = Infinity;
-        if (middlePoints.length > 1 && middlePoints.length <= 5) { // 5以内全排列
-            let allOrders = permute(middlePoints);
-            for (let order of allOrders) {
-            let overlap = calcRouteOverlap(order);
-            if (overlap < minOverlap) {
-                minOverlap = overlap;
-                bestOrder = order;
+            // TSP优化：根据中间点数量选择算法，最小化重复路线
+            function permute(arr) {
+                if (arr.length <= 1) return [arr];
+                let result = [];
+                for (let i = 0; i < arr.length; i++) {
+                let rest = arr.slice(0, i).concat(arr.slice(i + 1));
+                let restPerm = permute(rest);
+                for (let perm of restPerm) {
+                    result.push([arr[i]].concat(perm));
+                }
+                }
+                return result;
             }
-            }
-        } else if (middlePoints.length > 5) { // 超过5个用最近邻
-            bestOrder = nearestNeighborMinOverlap(middlePoints);
-        }
 
-        // 构建路径点数组：起点-最优中间点顺序-终点
-        let routePoints = [startPoint, ...bestOrder, endPoint];
-        
-        // 清除之前的路线
-        if (currentRoutePolyline) {
-            map.remove(currentRoutePolyline);
-        }
-        
-        calculateMultiPointRoute(routePoints);
-    }).catch(function(error) {
-        alert(error);
-    });
+            function calcRouteOverlap(pointsArr) {
+                let overlap = 0;
+                let prev = startPoint;
+                for (let p of pointsArr) {
+                overlap += prev.distance(p);
+                prev = p;
+                }
+                overlap += prev.distance(endPoint);
+                return overlap;
+            }
+
+            // 最近邻启发式算法，最小化重复路线
+            function nearestNeighborMinOverlap(pointsArr) {
+                let unvisited = pointsArr.slice();
+                let order = [];
+                let current = startPoint;
+                while (unvisited.length > 0) {
+                let minIdx = 0;
+                let minDist = current.distance(unvisited[0]);
+                for (let i = 1; i < unvisited.length; i++) {
+                    let d = current.distance(unvisited[i]);
+                    if (d < minDist) {
+                    minDist = d;
+                    minIdx = i;
+                    }
+                }
+                order.push(unvisited[minIdx]);
+                current = unvisited[minIdx];
+                unvisited.splice(minIdx, 1);
+                }
+                return order;
+            }
+
+            let bestOrder = middlePoints;
+            let minOverlap = Infinity;
+            if (middlePoints.length > 1 && middlePoints.length <= 5) { // 5以内全排列
+                let allOrders = permute(middlePoints);
+                for (let order of allOrders) {
+                let overlap = calcRouteOverlap(order);
+                if (overlap < minOverlap) {
+                    minOverlap = overlap;
+                    bestOrder = order;
+                }
+                }
+            } else if (middlePoints.length > 5) { // 超过5个用最近邻
+                bestOrder = nearestNeighborMinOverlap(middlePoints);
+            }
+
+            // 构建路径点数组：起点-最优中间点顺序-终点
+            let routePoints = [startPoint, ...bestOrder, endPoint];
+            
+            // 清除之前的路线
+            if (currentRoutePolyline) {
+                map.remove(currentRoutePolyline);
+            }
+            
+            calculateMultiPointRoute(routePoints);
+        }).catch(function(error) {
+            alert(error);
+        });
+    }
+    else {
+        Promise.all([
+            searchPoint(endText)
+        ]).then(function(results) {
+            const startPoint = userlocate; // 使用用户当前位置作为起点
+            const endPoint = results[0];
+
+            // 构建中间景点坐标数组
+            let middlePoints = [];
+            selectedPoints.forEach(point => {
+                const feature = poiFeatures.find(f => f.properties.name === point);
+                if (feature) {
+                    const coords = feature.geometry.coordinates;
+                    middlePoints.push(new AMap.LngLat(coords[0], coords[1]));
+                }
+            });
+
+            // TSP优化：根据中间点数量选择算法，最小化重复路线
+            function permute(arr) {
+                if (arr.length <= 1) return [arr];
+                let result = [];
+                for (let i = 0; i < arr.length; i++) {
+                let rest = arr.slice(0, i).concat(arr.slice(i + 1));
+                let restPerm = permute(rest);
+                for (let perm of restPerm) {
+                    result.push([arr[i]].concat(perm));
+                }
+                }
+                return result;
+            }
+
+            function calcRouteOverlap(pointsArr) {
+                let overlap = 0;
+                let prev = startPoint;
+                for (let p of pointsArr) {
+                overlap += prev.distance(p);
+                prev = p;
+                }
+                overlap += prev.distance(endPoint);
+                return overlap;
+            }
+
+            // 最近邻启发式算法，最小化重复路线
+            function nearestNeighborMinOverlap(pointsArr) {
+                let unvisited = pointsArr.slice();
+                let order = [];
+                let current = startPoint;
+                while (unvisited.length > 0) {
+                let minIdx = 0;
+                let minDist = current.distance(unvisited[0]);
+                for (let i = 1; i < unvisited.length; i++) {
+                    let d = current.distance(unvisited[i]);
+                    if (d < minDist) {
+                    minDist = d;
+                    minIdx = i;
+                    }
+                }
+                order.push(unvisited[minIdx]);
+                current = unvisited[minIdx];
+                unvisited.splice(minIdx, 1);
+                }
+                return order;
+            }
+
+            let bestOrder = middlePoints;
+            let minOverlap = Infinity;
+            if (middlePoints.length > 1 && middlePoints.length <= 5) { // 5以内全排列
+                let allOrders = permute(middlePoints);
+                for (let order of allOrders) {
+                let overlap = calcRouteOverlap(order);
+                if (overlap < minOverlap) {
+                    minOverlap = overlap;
+                    bestOrder = order;
+                }
+                }
+            } else if (middlePoints.length > 5) { // 超过5个用最近邻
+                bestOrder = nearestNeighborMinOverlap(middlePoints);
+            }
+
+            // 构建路径点数组：起点-最优中间点顺序-终点
+            let routePoints = [startPoint, ...bestOrder, endPoint];
+            
+            // 清除之前的路线
+            if (currentRoutePolyline) {
+                map.remove(currentRoutePolyline);
+            }
+            
+            calculateMultiPointRoute(routePoints);
+        }).catch(function(error) {
+            alert(error);
+        });
+    }
 }
 
 // 计算多点路线

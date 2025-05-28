@@ -4,7 +4,7 @@ let isMapInitialized = false;
 
 // 初始化步行导航插件
 let walking;
-
+let userlocate;
 let geocoder;
 
 // 初始化高德地图
@@ -130,55 +130,57 @@ function locateUser() {
         
         // 定位按钮点击事件
         locateBtn.addEventListener('click', function() {
-            navigator.geolocation.getCurrentPosition(function(position) {
-                const currentPos = [position.coords.longitude, position.coords.latitude];
-                // 将点转换为GCJ02坐标系
-                AMap.convertFrom(currentPos, 'gps', function(status, result) {
-                    if (status === 'complete' && result.locations && result.locations.length > 0) {
-                        const gcj02Pos = result.locations[0];
-                        // 创建当前位置标记
-                        const locationMarker = new AMap.Marker({
-                            position: gcj02Pos,
-                            title: '当前位置',
-                        });
-
-                        // 将标记添加到地图
-                        map.add(locationMarker);
-
-                        // 将地图中心设置为当前位置
-                        map.setCenter(gcj02Pos);
-
-                        // 2秒后移除标记
-                        setTimeout(function() {
-                            map.remove(locationMarker);
-                        }, 2000);
-                    } else {
-                        alert('坐标转换失败');
-                    }
-                });
-                
-            }, function(error) {
-                switch(error.code) {
-                    case error.PERMISSION_DENIED:
-                        alert("用户拒绝了位置请求");
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        alert("位置信息不可用");
-                        break;
-                    case error.TIMEOUT:
-                        alert("请求超时");
-                        break;
-                    case error.UNKNOWN_ERROR:
-                        alert("未知错误");
-                        break;
-                }
-            });
+            locateUser();
         });
     }
     else {
         alert("浏览器不支持定位");
     }
 }
+
+function locateUser() {
+    navigator.geolocation.getCurrentPosition(function(position) {
+        const currentPos = [position.coords.longitude, position.coords.latitude];
+        // 将点转换为GCJ02坐标系
+        AMap.convertFrom(currentPos, 'gps', function(status, result) {
+            if (status === 'complete' && result.locations && result.locations.length > 0) {
+                const gcj02Pos = result.locations[0];
+                // 创建当前位置标记
+                const locationMarker = new AMap.Marker({
+                    position: gcj02Pos,
+                    
+                    title: '当前位置',
+                });
+
+                userlocate = gcj02Pos;
+                // 将标记添加到地图
+                map.add(locationMarker);
+
+                // 2秒后移除标记
+                setTimeout(function() {
+                    map.remove(locationMarker);
+                }, 2000);
+            }
+        });
+        
+    }, function(error) {
+        switch(error.code) {
+            case error.PERMISSION_DENIED:
+                alert("用户拒绝了位置请求");
+                break;
+            case error.POSITION_UNAVAILABLE:
+                alert("位置信息不可用");
+                break;
+            case error.TIMEOUT:
+                alert("请求超时");
+                break;
+            case error.UNKNOWN_ERROR:
+                alert("未知错误");
+                break;
+        }
+    });
+}
+
 
 // 在DOM加载完成后初始化地图
 document.addEventListener('DOMContentLoaded', function() {
@@ -188,6 +190,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 注册地图事件
     registerMapEvents();
     // 添加定位按钮
+    
     locateUser();
     // 添加景点标记
     fetch('geojsonGCJ/points_of_interest.geojson')
@@ -265,3 +268,8 @@ document.getElementById('clear-selected').addEventListener('click', () => {
     isfinished= false;
     addPoisToMap("all", poiFeatures);
 });
+
+// 每十秒自动定位一次
+setInterval(() => {
+    locateUser();
+}, 1000);
