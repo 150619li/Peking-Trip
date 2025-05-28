@@ -153,12 +153,16 @@ function locateUser() {
 
                 userlocate = gcj02Pos;
                 // 将标记添加到地图
+
+                // 移除之前的用户定位标记
+                if (window.userLocationMarker) {
+                    map.remove(window.userLocationMarker);
+                }
+
+                // 更新用户定位标记
+                window.userLocationMarker = locationMarker;
                 map.add(locationMarker);
 
-                // 2秒后移除标记
-                setTimeout(function() {
-                    map.remove(locationMarker);
-                }, 2000);
             }
         });
         
@@ -270,6 +274,7 @@ document.getElementById('clear-selected').addEventListener('click', () => {
     if (currentRoutePolyline) {
         map.remove(currentRoutePolyline);
     }
+    window.lastNearestIndex = undefined; // 清除最近点索引
     document.getElementById('startNavigationBtn').textContent = isinnavigate ? '开始导航' : '停止导航';
     map.setPitch(0);
     map.setRotation(0);
@@ -286,9 +291,11 @@ if (navigator.geolocation){
 // 每十秒自动定位一次
 setInterval(() => {
         locateUser();
-
-        if(isinnavigate){
+        if (isinnavigate) {
             navigate();
         }
-    }, 1000);
+        
+    }, 500);
 }
+
+

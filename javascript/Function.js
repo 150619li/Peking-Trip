@@ -596,6 +596,7 @@ function navigatestart(){
         isinnavigate = true;
     }
     else{
+        window.lastNearestIndex = undefined; // 清除最近点索引
         document.getElementById('startNavigationBtn').textContent = isinnavigate ? '开始导航' : '停止导航';
         map.setPitch(0);
         map.setRotation(0);
@@ -615,23 +616,35 @@ function navigate(){
         console.error('用户位置未定义');
         return;
     }
+
     const path = currentRoutePolyline.getPath();
+    let searchPoints = path; // 默认搜索所有路线点
+
+    if (window.lastNearestIndex !== undefined) {
+        // 如果有上一次最近点的索引，只搜索附近五个点
+        const startIndex = Math.max(0, window.lastNearestIndex - 5);
+        const endIndex = Math.min(path.length-1, window.lastNearestIndex + 5);
+        searchPoints = path.slice(startIndex, endIndex);
+    }
+
     // 找到与用户位置最近的点的索引
     let nearestIndex = -1;
     let minDistance = Infinity;
 
-    path.forEach((point, index) => {
+    searchPoints.forEach((point, index) => {
         const distance = userlocate.distance(point);
         if (distance < minDistance) {
             minDistance = distance;
-            nearestIndex = index;
+            nearestIndex = path.indexOf(point); // 获取原始路径中的索引
         }
     });
 
     console.log(`与用户位置最近的点索引: ${nearestIndex}, 距离: ${minDistance}`);
+    window.lastNearestIndex = nearestIndex; // 保存最近点索引
+
 
     if (nearestIndex !== -1 && nearestIndex < path.length - 1) {
-        const nextPoint = path[nearestIndex + 1];
+        const nextPoint = path[nearestIndex + 2];
         const nearestPoint = path[nearestIndex];
         const angle = Math.atan2(
             nextPoint.lat - nearestPoint.lat,
