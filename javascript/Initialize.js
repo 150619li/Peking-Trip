@@ -266,6 +266,20 @@ document.getElementById('clear-selected').addEventListener('click', () => {
     selectedList.innerHTML = '';
     isfinished= false;
     addPoisToMap("all", poiFeatures);
+    // 清除之前的覆盖物但保留标记
+    if (currentRoutePolyline) {
+        map.remove(currentRoutePolyline);
+    }
+    document.getElementById('startNavigationBtn').textContent = isinnavigate ? '开始导航' : '停止导航';
+    map.setPitch(0);
+    map.setRotation(0);
+    map.setFitView(currentRoutePolyline);
+    currentRoutePolyline = null;
+    isinnavigate = false; 
+    // 清除之前的虚线
+    if (window.dashedLine) {
+        map.remove(window.dashedLine);
+    }
 });
 
 if (navigator.geolocation){

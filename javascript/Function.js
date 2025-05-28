@@ -601,6 +601,10 @@ function navigatestart(){
         map.setRotation(0);
         map.setFitView(currentRoutePolyline);
         isinnavigate = false; 
+        // 清除之前的虚线
+        if (window.dashedLine) {
+            map.remove(window.dashedLine);
+        }
     }
 } 
 
@@ -633,6 +637,11 @@ function navigate(){
             nextPoint.lat - nearestPoint.lat,
             nextPoint.lng - nearestPoint.lng
         ) * (180 / Math.PI);
+        // 清除之前的虚线
+        if (window.dashedLine) {
+            map.remove(window.dashedLine);
+        }
+
         // 绘制用户位置到最近点的虚线
         const dashedLine = new AMap.Polyline({
             path: [userlocate, nearestPoint],
@@ -642,6 +651,9 @@ function navigate(){
             lineDash: [10, 5], // 设置虚线样式
         });
         map.add(dashedLine);
+
+        // 保存当前虚线到全局变量
+        window.dashedLine = dashedLine;
         map.setPitch(60); // 设置地图的俯仰角为60度
         map.setRotation(angle-90); // 设置地图视角转向连线方向
         map.setZoomAndCenter(20, nearestPoint); // 聚焦到用户位置
